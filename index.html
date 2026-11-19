@@ -5,148 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>iOS Calculator</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; user-select: none; }
+    body { background: radial-gradient(circle at top, #2c2c30 0%, #141416 70%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .calculator { position: relative; overflow: hidden; background: linear-gradient(180deg, #0b0b0d 0%, #000 100%); width: 340px; padding: 24px; border-radius: 44px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 28px 60px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.12); }
+    .calculator.shimmering::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 10; background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.06) 38%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.06) 62%, transparent 80%); transform: translateX(-140%); animation: shimmerSweep 1.25s ease-in-out 4; }
+    @keyframes shimmerSweep { 0% { transform: translateX(-140%); } 100% { transform: translateX(140%); } }
+    .display { height: 140px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; padding: 0 12px 16px; overflow: hidden; }
+    .expression { color: #8e8e93; font-size: 20px; min-height: 26px; margin-bottom: 4px; white-space: nowrap; }
+    .result { color: #fff; font-size: 64px; font-weight: 300; line-height: 1.1; white-space: nowrap; }
+    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    button.calc-key { height: 64px; width: 64px; border-radius: 50%; border: none; font-size: 28px; font-weight: 400; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: filter .15s ease, background-color .2s ease, color .2s ease, transform .1s ease; }
+    button.calc-key:active { filter: brightness(135%); transform: scale(.96); }
+    .btn-func { background-color: #a5a5a5; color: #000; font-size: 24px; }
+    .btn-num { background-color: #333; color: #fff; }
+    .btn-op { background-color: #ff9f0a; color: #fff; font-size: 32px; }
+    .btn-op.active { background-color: #fff; color: #ff9f0a; }
+    .btn-zero { text-align: center; }
 
-    body {
-      background: radial-gradient(circle at top, #2c2c30 0%, #141416 70%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .calculator {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(180deg, #0b0b0d 0%, #000000 100%);
-      width: 340px;
-      padding: 24px;
-      border-radius: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow:
-        0 28px 60px rgba(0, 0, 0, 0.72),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    }
-
-    /* 5-Second Shimmer Overlay */
-    .calculator.shimmering::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 10;
-      background: linear-gradient(
-        115deg,
-        transparent 20%,
-        rgba(255, 255, 255, 0.06) 38%,
-        rgba(255, 255, 255, 0.28) 50%,
-        rgba(255, 255, 255, 0.06) 62%,
-        transparent 80%
-      );
-      transform: translateX(-140%);
-      animation: shimmerSweep 1.25s ease-in-out 4;
-    }
-
-    @keyframes shimmerSweep {
-      0% {
-        transform: translateX(-140%);
-      }
-      100% {
-        transform: translateX(140%);
-      }
-    }
-
-    .display {
-      height: 140px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: flex-end;
-      padding: 0 12px 16px;
-      overflow: hidden;
-    }
-
-    .expression {
-      color: #8e8e93;
-      font-size: 20px;
-      min-height: 26px;
-      margin-bottom: 4px;
-      white-space: nowrap;
-    }
-
-    .result {
-      color: #ffffff;
-      font-size: 64px;
-      font-weight: 300;
-      line-height: 1.1;
-      white-space: nowrap;
-    }
-
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-
-    button.calc-key {
-      height: 64px;
-      width: 64px;
-      border-radius: 50%;
-      border: none;
-      font-size: 28px;
-      font-weight: 400;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: filter 0.15s ease, background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-    }
-
-    button.calc-key:active {
-      filter: brightness(135%);
-      transform: scale(0.96);
-    }
-
-    /* Button Colors */
-    .btn-func {
-      background-color: #a5a5a5;
-      color: #000000;
-      font-size: 24px;
-    }
-
-    .btn-num {
-      background-color: #333333;
-      color: #ffffff;
-    }
-
-    .btn-op {
-      background-color: #ff9f0a;
-      color: #ffffff;
-      font-size: 32px;
-    }
-
-    /* Active Operator Highlight */
-    .btn-op.active {
-      background-color: #ffffff;
-      color: #ff9f0a;
-    }
-
-    /* Centered Zero Button */
-    .btn-zero {
-      text-align: center;
-    }
+    /* History */
+    .hist-toggle { position: absolute; top: 20px; left: 24px; z-index: 5; width: 36px; height: 36px; border-radius: 50%; border: none; background: #333; color: #ff9f0a; font-size: 18px; cursor: pointer; }
+    .hist-toggle:active { filter: brightness(135%); }
+    .history-panel { position: absolute; inset: 0; z-index: 20; background: rgba(10,10,12,.97); padding: 24px; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .3s ease; }
+    .history-panel.open { transform: translateY(0); }
+    .hist-head { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+    .hist-head button { background: none; border: none; color: #ff9f0a; font-size: 16px; cursor: pointer; padding: 6px; }
+    .hist-list { flex: 1; overflow-y: auto; list-style: none; }
+    .hist-item { padding: 12px 4px; border-bottom: 1px solid #2a2a2e; cursor: pointer; text-align: right; }
+    .hist-item:active { background: #1c1c1e; }
+    .hist-item .h-expr { color: #8e8e93; font-size: 15px; }
+    .hist-item .h-res { color: #fff; font-size: 26px; font-weight: 300; }
+    .hist-empty { color: #8e8e93; text-align: center; margin-top: 40px; }
+    .hist-status { color: #8e8e93; font-size: 12px; text-align: center; padding-top: 8px; min-height: 22px; }
+    @media (prefers-reduced-motion: reduce) { .history-panel { transition: none; } .calculator.shimmering::after { animation: none; } }
   </style>
 </head>
 <body>
 
   <div class="calculator shimmering" id="calculator">
+    <button type="button" class="hist-toggle" id="hist-open" aria-label="Show history">🕘</button>
+
     <div class="display">
       <div class="expression" id="expression"></div>
       <div class="result" id="result">0</div>
@@ -178,6 +75,15 @@
       <button type="button" class="calc-key btn-num btn-zero" onclick="appendNumber('0')">0</button>
       <button type="button" class="calc-key btn-op" onclick="calculate()">=</button>
     </div>
+
+    <div class="history-panel" id="history-panel" aria-hidden="true">
+      <div class="hist-head">
+        <span>History</span>
+        <button type="button" id="hist-close">Done</button>
+      </div>
+      <ul class="hist-list" id="hist-list"><li class="hist-empty">No calculations yet.</li></ul>
+      <div class="hist-status" id="hist-status"></div>
+    </div>
   </div>
 
   <script>
@@ -199,12 +105,8 @@
       calculatorEl.classList.remove('shimmering');
       void calculatorEl.offsetWidth;
       calculatorEl.classList.add('shimmering');
-      shimmerTimer = setTimeout(() => {
-        calculatorEl.classList.remove('shimmering');
-      }, durationMs);
+      shimmerTimer = setTimeout(() => calculatorEl.classList.remove('shimmering'), durationMs);
     }
-
-    // Start 5-second shimmer on initial load
     triggerShimmer(5000);
 
     function updateDisplay() {
@@ -212,7 +114,6 @@
       if (len > 9) resultDisplay.style.fontSize = '38px';
       else if (len > 6) resultDisplay.style.fontSize = '48px';
       else resultDisplay.style.fontSize = '64px';
-
       resultDisplay.textContent = formatNumber(currentInput);
       clearBtn.textContent = (currentInput !== '0' || previousInput !== '') ? 'C' : 'AC';
     }
@@ -297,9 +198,7 @@
 
     function toggleSign() {
       if (currentInput === '0' || currentInput === 'Error') return;
-      currentInput = currentInput.startsWith('-')
-        ? currentInput.slice(1)
-        : '-' + currentInput;
+      currentInput = currentInput.startsWith('-') ? currentInput.slice(1) : '-' + currentInput;
       if (operator !== null && !shouldResetScreen) {
         expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
       }
@@ -319,10 +218,7 @@
       if (currentInput === 'Error') return;
       if (operator !== null && !shouldResetScreen) {
         const resultVal = computeValue(parseFloat(previousInput), parseFloat(currentInput), operator);
-        if (resultVal === 'Error') {
-          showError();
-          return;
-        }
+        if (resultVal === 'Error') { showError(); return; }
         previousInput = String(resultVal);
         currentInput = previousInput;
       } else {
@@ -331,7 +227,6 @@
       operator = op;
       shouldResetScreen = true;
       expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator}`;
-
       clearActiveOperator();
       if (btnElement) btnElement.classList.add('active');
       updateDisplay();
@@ -366,9 +261,7 @@
 
     function calculate() {
       if (currentInput === 'Error') return;
-
       let prev, current, activeOp;
-
       if (operator !== null) {
         prev = parseFloat(previousInput);
         current = shouldResetScreen ? prev : parseFloat(currentInput);
@@ -382,23 +275,54 @@
       } else {
         return;
       }
-
       const resultVal = computeValue(prev, current, activeOp);
-      if (resultVal === 'Error') {
-        showError();
-        return;
-      }
+      if (resultVal === 'Error') { showError(); return; }
 
-      expressionDisplay.textContent = `${formatNumber(String(prev))} ${activeOp} ${formatNumber(String(current))} =`;
+      const exprText = `${formatNumber(String(prev))} ${activeOp} ${formatNumber(String(current))}`;
+      expressionDisplay.textContent = exprText + ' =';
       currentInput = String(resultVal);
       previousInput = '';
       operator = null;
       shouldResetScreen = true;
       clearActiveOperator();
       updateDisplay();
+
+      // Save to history (defined by the module script below)
+      if (window.saveHistory) window.saveHistory(exprText, currentInput);
     }
 
+    // Load a history entry back onto the display
+    window.recallHistory = function (resultStr) {
+      currentInput = resultStr;
+      previousInput = '';
+      operator = null;
+      shouldResetScreen = true;
+      expressionDisplay.textContent = '';
+      clearActiveOperator();
+      updateDisplay();
+    };
+
+    // History panel open/close (kept here so it works even if Firebase fails to load)
+    window.openHistoryPanel = function () {
+      const p = document.getElementById('history-panel');
+      p.classList.add('open');
+      p.setAttribute('aria-hidden', 'false');
+      if (!window.saveHistory) {
+        document.getElementById('hist-status').textContent =
+          'Firebase has not loaded. Open this page over http(s), e.g. GitHub Pages, not as a local file.';
+      }
+    };
+    window.closeHistoryPanel = function () {
+      const p = document.getElementById('history-panel');
+      p.classList.remove('open');
+      p.setAttribute('aria-hidden', 'true');
+    };
+    document.getElementById('hist-open').addEventListener('click', window.openHistoryPanel);
+    document.getElementById('hist-close').addEventListener('click', window.closeHistoryPanel);
+
     document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (document.getElementById('history-panel').classList.contains('open')) return;
       if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
       if (e.key === '.') appendDecimal();
       if (e.key === 'Backspace') handleBackspace();
@@ -409,6 +333,86 @@
       if (e.key === '*') chooseOperator('×', document.querySelector('[data-op="×"]'));
       if (e.key === '/') { e.preventDefault(); chooseOperator('÷', document.querySelector('[data-op="÷"]')); }
     });
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAQGgUda3Io6HpDYWBWdqIV1rC6M75rk4",
+      authDomain: "nexus-40e33.firebaseapp.com",
+      databaseURL: "https://nexus-40e33-default-rtdb.firebaseio.com",
+      projectId: "nexus-40e33",
+      storageBucket: "nexus-40e33.firebasestorage.app",
+      messagingSenderId: "144604648056",
+      appId: "1:144604648056:web:d1f12fe2f4876f4ffed38d",
+      measurementId: "G-QNN58MFXKH"
+    };
+
+    const panel = document.getElementById('history-panel');
+    const listEl = document.getElementById('hist-list');
+    const statusEl = document.getElementById('hist-status');
+
+    // Each browser gets its own history under history/<deviceId>
+    let deviceId = null;
+    try {
+      deviceId = localStorage.getItem('calcDeviceId');
+      if (!deviceId) {
+        deviceId = 'd_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        localStorage.setItem('calcDeviceId', deviceId);
+      }
+    } catch (e) { deviceId = 'shared'; }
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    function render(items) {
+      listEl.innerHTML = '';
+      if (!items.length) {
+        const li = document.createElement('li');
+        li.className = 'hist-empty';
+        li.textContent = 'No calculations yet.';
+        listEl.appendChild(li);
+        return;
+      }
+      items.slice().reverse().forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'hist-item';
+        const ex = document.createElement('div');
+        ex.className = 'h-expr';
+        ex.textContent = item.expression + ' =';
+        const rs = document.createElement('div');
+        rs.className = 'h-res';
+        rs.textContent = item.result.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        li.append(ex, rs);
+        li.addEventListener('click', () => { window.recallHistory(item.result); closePanel(); });
+        listEl.appendChild(li);
+      });
+    }
+
+    const closePanel = window.closeHistoryPanel;
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const historyRef = ref(db, 'history/' + deviceId);
+
+      window.saveHistory = (expression, result) => {
+        push(historyRef, { expression, result, time: serverTimestamp() })
+          .catch(err => setStatus("Couldn't save: " + err.code));
+      };
+
+      // Live-load the 50 most recent entries
+      onValue(query(historyRef, limitToLast(50)), snap => {
+        const items = [];
+        snap.forEach(child => items.push(child.val()));
+        render(items);
+        setStatus('');
+      }, err => setStatus("Couldn't load history: " + err.code));
+    } catch (err) {
+      setStatus('History unavailable.');
+    }
   </script>
 </body>
 </html>
