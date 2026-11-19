@@ -35,6 +35,10 @@
     .avatar-menu #menu-logout { color: #ff453a; }
     .profile-body { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 24px; }
     .profile-avatar { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; background: #ff9f0a; color: #fff; font-size: 38px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .profile-change { padding: 0 24px; height: 40px; font-size: 15px; margin: 4px 0; }
+    .profile-change:disabled { opacity: .5; cursor: default; }
+    .profile-status { color: #8e8e93; font-size: 13px; min-height: 18px; text-align: center; }
+    .profile-status.error { color: #ff453a; }
     .profile-name { color: #fff; font-size: 22px; font-weight: 600; }
     .profile-email { color: #8e8e93; font-size: 15px; word-break: break-all; text-align: center; }
     .profile-meta { align-self: stretch; margin-top: 24px; }
@@ -136,6 +140,9 @@
       </div>
       <div class="profile-body">
         <div class="profile-avatar" id="profile-avatar"></div>
+        <button type="button" class="auth-btn auth-secondary profile-change" id="profile-change">Change photo</button>
+        <input type="file" id="profile-file" accept="image/*" hidden>
+        <div class="profile-status" id="profile-status" role="status"></div>
         <div class="profile-name" id="profile-name"></div>
         <div class="profile-email" id="profile-email"></div>
         <dl class="profile-meta">
@@ -148,10 +155,7 @@
     <div class="history-panel" id="history-panel" aria-hidden="true">
       <div class="hist-head">
         <span>History</span>
-        <span>
-          <button type="button" id="hist-signout">Sign out</button>
-          <button type="button" id="hist-close">Done</button>
-        </span>
+        <button type="button" id="hist-close">Done</button>
       </div>
       <div class="hist-user" id="hist-user"></div>
       <ul class="hist-list" id="hist-list"><li class="hist-empty">No calculations yet.</li></ul>
@@ -424,8 +428,12 @@
     import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
-             createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut }
+             createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Cloudinary (unsigned uploads). Never put your API secret in this file.
+    const CLOUDINARY_CLOUD_NAME = 'dmq6rct6';
+    const CLOUDINARY_UPLOAD_PRESET = 'raregrade';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCAQGgUda3Io6HpDYWBWdqIV1rC6M75rk4",
@@ -522,12 +530,29 @@
       document.getElementById('profile-since').textContent = user.metadata.creationTime
         ? new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
         : '';
+      setProfileStatus('');
       profilePanel.classList.add('open');
       profilePanel.setAttribute('aria-hidden', 'false');
     }
     function closeProfile() {
       profilePanel.classList.remove('open');
       profilePanel.setAttribute('aria-hidden', 'true');
+    }
+
+    const profileStatus = document.getElementById('profile-status');
+    function setProfileStatus(msg, isError) {
+      profileStatus.textContent = msg;
+      profileStatus.classList.toggle('error', !!isError);
+    }
+    async function uploadToCloudinary(file) {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error((data.error && data.error.message) || 'Upload failed.');
+      // Square, face-aware crop at avatar size
+      return data.secure_url.replace('/upload/', '/upload/c_fill,g_face,w_256,h_256,f_auto,q_auto/');
     }
 
     try {
@@ -589,11 +614,37 @@
         signInWithPopup(auth, new GoogleAuthProvider()).catch(showAuthError);
       });
       const doSignOut = () => signOut(auth).catch(err => setStatus("Couldn't sign out: " + err.code));
-      document.getElementById('hist-signout').addEventListener('click', doSignOut);
       avatarBtn.addEventListener('click', e => { e.stopPropagation(); setMenu(menuEl.hidden); });
       document.getElementById('menu-profile').addEventListener('click', () => { setMenu(false); if (currentUser) openProfile(currentUser); });
       document.getElementById('menu-logout').addEventListener('click', () => { setMenu(false); doSignOut(); });
       document.getElementById('profile-close').addEventListener('click', closeProfile);
+      const fileInput = document.getElementById('profile-file');
+      const changeBtn = document.getElementById('profile-change');
+      changeBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        fileInput.value = '';
+        if (!file || !currentUser) return;
+        if (CLOUDINARY_CLOUD_NAME.startsWith('YOUR_') || CLOUDINARY_UPLOAD_PRESET.startsWith('YOUR_')) {
+          setProfileStatus('Photo upload is not set up yet. Add your Cloudinary cloud name and upload preset.', true);
+          return;
+        }
+        if (!file.type.startsWith('image/')) { setProfileStatus('Choose an image file.', true); return; }
+        if (file.size > 5 * 1024 * 1024) { setProfileStatus('Image must be 5 MB or smaller.', true); return; }
+        changeBtn.disabled = true;
+        setProfileStatus('Uploading\u2026');
+        try {
+          const url = await uploadToCloudinary(file);
+          await updateProfile(currentUser, { photoURL: url });
+          paintAvatar(avatarBtn, currentUser);
+          paintAvatar(document.getElementById('profile-avatar'), currentUser);
+          setProfileStatus('Photo updated.');
+        } catch (err) {
+          setProfileStatus(err.message || 'Could not update your photo.', true);
+        } finally {
+          changeBtn.disabled = false;
+        }
+      });
       document.addEventListener('click', e => { if (!menuEl.hidden && !menuEl.contains(e.target)) setMenu(false); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menuEl.hidden) { setMenu(false); avatarBtn.focus(); } });
     } catch (err) {
