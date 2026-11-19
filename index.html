@@ -5,260 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>iOS Calculator</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; user-select: none; }
+    body { background: radial-gradient(circle at top, #2c2c30 0%, #141416 70%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .calculator { position: relative; overflow: hidden; background: linear-gradient(180deg, #0b0b0d 0%, #000 100%); width: 340px; padding: 24px; border-radius: 44px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 28px 60px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.12); }
+    .calculator.shimmering::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 10; background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.06) 38%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.06) 62%, transparent 80%); transform: translateX(-140%); animation: shimmerSweep 1.25s ease-in-out 4; }
+    @keyframes shimmerSweep { 0% { transform: translateX(-140%); } 100% { transform: translateX(140%); } }
+    .display { height: 140px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; padding: 0 12px 16px; overflow: hidden; }
+    .expression { color: #8e8e93; font-size: 20px; min-height: 26px; margin-bottom: 4px; white-space: nowrap; }
+    .result { color: #fff; font-size: 64px; font-weight: 300; line-height: 1.1; white-space: nowrap; }
+    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    button.calc-key { height: 64px; width: 64px; border-radius: 50%; border: none; font-size: 28px; font-weight: 400; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: filter .15s ease, background-color .2s ease, color .2s ease, transform .1s ease; }
+    button.calc-key:active { filter: brightness(135%); transform: scale(.96); }
+    .btn-func { background-color: #a5a5a5; color: #000; font-size: 24px; }
+    .btn-num { background-color: #333; color: #fff; }
+    .btn-op { background-color: #ff9f0a; color: #fff; font-size: 32px; }
+    .btn-op.active { background-color: #fff; color: #ff9f0a; }
+    .btn-zero { text-align: center; }
 
-    body {
-      background: radial-gradient(circle at top, #2c2c30 0%, #141416 70%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .calculator {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(180deg, #0b0b0d 0%, #000000 100%);
-      width: 340px;
-      padding: 24px;
-      border-radius: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow:
-        0 28px 60px rgba(0, 0, 0, 0.72),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    }
-
-    /* 5-Second Shimmer Overlay */
-    .calculator.shimmering::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 20;
-      background: linear-gradient(
-        115deg,
-        transparent 20%,
-        rgba(255, 255, 255, 0.06) 38%,
-        rgba(255, 255, 255, 0.28) 50%,
-        rgba(255, 255, 255, 0.06) 62%,
-        transparent 80%
-      );
-      transform: translateX(-140%);
-      animation: shimmerSweep 1.25s ease-in-out 4;
-    }
-
-    @keyframes shimmerSweep {
-      0% {
-        transform: translateX(-140%);
-      }
-      100% {
-        transform: translateX(140%);
-      }
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .history-btn {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      border: none;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background-color 0.15s ease;
-    }
-
-    .history-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .display {
-      height: 120px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: flex-end;
-      padding: 0 12px 16px;
-      overflow: hidden;
-    }
-
-    .expression {
-      color: #8e8e93;
-      font-size: 20px;
-      min-height: 26px;
-      margin-bottom: 4px;
-      white-space: nowrap;
-    }
-
-    .result {
-      color: #ffffff;
-      font-size: 64px;
-      font-weight: 300;
-      line-height: 1.1;
-      white-space: nowrap;
-    }
-
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-
-    button.calc-key {
-      height: 64px;
-      width: 64px;
-      border-radius: 50%;
-      border: none;
-      font-size: 28px;
-      font-weight: 400;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: filter 0.15s ease, background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-    }
-
-    button.calc-key:active {
-      filter: brightness(135%);
-      transform: scale(0.96);
-    }
-
-    /* Button Colors */
-    .btn-func {
-      background-color: #a5a5a5;
-      color: #000000;
-      font-size: 24px;
-    }
-
-    .btn-num {
-      background-color: #333333;
-      color: #ffffff;
-    }
-
-    .btn-op {
-      background-color: #ff9f0a;
-      color: #ffffff;
-      font-size: 32px;
-    }
-
-    /* Active Operator Highlight */
-    .btn-op.active {
-      background-color: #ffffff;
-      color: #ff9f0a;
-    }
-
-    /* Centered Zero Button */
-    .btn-zero {
-      text-align: center;
-    }
-
-    /* History Drawer */
-    .history-drawer {
-      position: absolute;
-      inset: 0;
-      background: rgba(14, 14, 16, 0.97);
-      backdrop-filter: blur(12px);
-      z-index: 15;
-      padding: 24px;
-      display: none;
-      flex-direction: column;
-      border-radius: 44px;
-    }
-
-    .history-drawer.open {
-      display: flex;
-    }
-
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .history-header h2 {
-      color: #ffffff;
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .history-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .history-link-btn {
-      background: none;
-      border: none;
-      color: #ff9f0a;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .history-list {
-      flex: 1;
-      overflow-y: auto;
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .history-empty {
-      color: #8e8e93;
-      font-size: 15px;
-      text-align: center;
-      margin-top: 60px;
-    }
-
-    .history-item {
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
-      padding: 12px 14px;
-      text-align: right;
-      cursor: pointer;
-      transition: background-color 0.15s ease;
-    }
-
-    .history-item:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .history-expr {
-      color: #a1a1aa;
-      font-size: 14px;
-      margin-bottom: 2px;
-    }
-
-    .history-val {
-      color: #ffffff;
-      font-size: 24px;
-      font-weight: 400;
-    }
+    /* History */
+    .hist-toggle { position: absolute; top: 20px; left: 24px; z-index: 5; width: 36px; height: 36px; border-radius: 50%; border: none; background: #333; color: #ff9f0a; font-size: 18px; cursor: pointer; }
+    .hist-toggle:active { filter: brightness(135%); }
+    .history-panel { position: absolute; inset: 0; z-index: 20; background: rgba(10,10,12,.97); padding: 24px; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .3s ease; }
+    .history-panel.open { transform: translateY(0); }
+    .hist-head { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+    .hist-head button { background: none; border: none; color: #ff9f0a; font-size: 16px; cursor: pointer; padding: 6px; }
+    .hist-list { flex: 1; overflow-y: auto; list-style: none; }
+    .hist-item { padding: 12px 4px; border-bottom: 1px solid #2a2a2e; cursor: pointer; text-align: right; }
+    .hist-item:active { background: #1c1c1e; }
+    .hist-item .h-expr { color: #8e8e93; font-size: 15px; }
+    .hist-item .h-res { color: #fff; font-size: 26px; font-weight: 300; }
+    .hist-empty { color: #8e8e93; text-align: center; margin-top: 40px; }
+    .hist-status { color: #8e8e93; font-size: 12px; text-align: center; padding-top: 8px; min-height: 22px; }
+    input { user-select: text; -webkit-user-select: text; }
+    .auth-overlay { position: absolute; inset: 0; z-index: 30; background: #000; padding: 32px 28px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+    .auth-overlay.hidden { display: none; }
+    .auth-overlay h1 { color: #fff; font-size: 28px; font-weight: 600; }
+    .auth-overlay p { color: #8e8e93; font-size: 14px; margin-bottom: 6px; }
+    .auth-overlay form { display: flex; flex-direction: column; gap: 10px; }
+    .auth-overlay input { height: 48px; border-radius: 14px; border: 1px solid #2a2a2e; background: #1c1c1e; color: #fff; font-size: 16px; padding: 0 14px; outline: none; }
+    .auth-overlay input:focus-visible { border-color: #ff9f0a; }
+    .auth-btn { height: 48px; border-radius: 24px; border: none; font-size: 16px; font-weight: 500; cursor: pointer; }
+    .auth-btn:active { filter: brightness(135%); }
+    .auth-primary { background: #ff9f0a; color: #fff; }
+    .auth-secondary { background: #333; color: #fff; }
+    .auth-google { background: #fff; color: #000; }
+    .auth-or { color: #8e8e93; font-size: 13px; text-align: center; }
+    .auth-error { color: #ff453a; font-size: 13px; min-height: 18px; }
+    .hist-user { color: #8e8e93; font-size: 13px; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (prefers-reduced-motion: reduce) { .history-panel { transition: none; } .calculator.shimmering::after { animation: none; } }
   </style>
 </head>
 <body>
 
   <div class="calculator shimmering" id="calculator">
-    <div class="top-bar">
-      <button type="button" class="history-btn" onclick="toggleHistory(true)">History</button>
-    </div>
+    <button type="button" class="hist-toggle" id="hist-open" aria-label="Show history">🕘</button>
 
     <div class="display">
       <div class="expression" id="expression"></div>
@@ -292,21 +92,35 @@
       <button type="button" class="calc-key btn-op" onclick="calculate()">=</button>
     </div>
 
-    <div class="history-drawer" id="history-drawer">
-      <div class="history-header">
-        <h2>History</h2>
-        <div class="history-actions">
-          <button type="button" class="history-link-btn" onclick="clearHistory()">Clear</button>
-          <button type="button" class="history-link-btn" onclick="toggleHistory(false)">Done</button>
-        </div>
+    <div class="auth-overlay" id="auth-overlay">
+      <h1>Sign in</h1>
+      <p>Sign in to use the calculator and keep your history.</p>
+      <button type="button" class="auth-btn auth-google" id="auth-google">Continue with Google</button>
+      <div class="auth-or">or use email</div>
+      <form id="auth-form" novalidate>
+        <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+        <input type="password" id="auth-password" placeholder="Password (6+ characters)" autocomplete="current-password">
+        <button type="submit" class="auth-btn auth-primary">Sign in</button>
+        <button type="button" class="auth-btn auth-secondary" id="auth-signup">Create account</button>
+      </form>
+      <div class="auth-error" id="auth-error" role="alert"></div>
+    </div>
+
+    <div class="history-panel" id="history-panel" aria-hidden="true">
+      <div class="hist-head">
+        <span>History</span>
+        <span>
+          <button type="button" id="hist-signout">Sign out</button>
+          <button type="button" id="hist-close">Done</button>
+        </span>
       </div>
-      <div class="history-list" id="history-list"></div>
+      <div class="hist-user" id="hist-user"></div>
+      <ul class="hist-list" id="hist-list"><li class="hist-empty">No calculations yet.</li></ul>
+      <div class="hist-status" id="hist-status"></div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'ios_calculator_history_v1';
-
     let currentInput = '0';
     let previousInput = '';
     let operator = null;
@@ -314,109 +128,26 @@
     let lastOperator = null;
     let shouldResetScreen = false;
     let shimmerTimer = null;
-    let memoryHistory = [];
 
     const calculatorEl = document.getElementById('calculator');
     const resultDisplay = document.getElementById('result');
     const expressionDisplay = document.getElementById('expression');
     const clearBtn = document.getElementById('clear-btn');
-    const historyDrawer = document.getElementById('history-drawer');
-    const historyListEl = document.getElementById('history-list');
-
-    function loadHistory() {
-      try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (err) {
-        return memoryHistory;
-      }
-    }
-
-    function saveHistory(items) {
-      memoryHistory = items.slice(0, 50);
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(memoryHistory));
-      } catch (err) {
-        // Keep in-memory fallback if storage is restricted
-      }
-    }
-
-    function addHistoryEntry(exprText, valueText) {
-      const items = loadHistory();
-      items.unshift({
-        id: Date.now(),
-        expression: exprText,
-        result: valueText
-      });
-      saveHistory(items);
-      renderHistory();
-    }
-
-    function clearHistory() {
-      memoryHistory = [];
-      try {
-        window.localStorage.removeItem(STORAGE_KEY);
-      } catch (err) {
-        // Ignore storage restriction
-      }
-      renderHistory();
-    }
-
-    function renderHistory() {
-      const items = loadHistory();
-      memoryHistory = items;
-      if (!items.length) {
-        historyListEl.innerHTML = '<div class="history-empty">No calculations yet.</div>';
-        return;
-      }
-
-      historyListEl.innerHTML = '';
-      items.forEach((item) => {
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        div.innerHTML = `
-          <div class="history-expr">${item.expression}</div>
-          <div class="history-val">${formatNumber(String(item.result))}</div>
-        `;
-        div.addEventListener('click', () => {
-          currentInput = String(item.result);
-          previousInput = '';
-          operator = null;
-          shouldResetScreen = true;
-          expressionDisplay.textContent = item.expression;
-          updateDisplay();
-          toggleHistory(false);
-        });
-        historyListEl.appendChild(div);
-      });
-    }
-
-    function toggleHistory(show) {
-      historyDrawer.classList.toggle('open', show);
-      if (show) renderHistory();
-    }
 
     function triggerShimmer(durationMs = 5000) {
       clearTimeout(shimmerTimer);
       calculatorEl.classList.remove('shimmering');
       void calculatorEl.offsetWidth;
       calculatorEl.classList.add('shimmering');
-      shimmerTimer = setTimeout(() => {
-        calculatorEl.classList.remove('shimmering');
-      }, durationMs);
+      shimmerTimer = setTimeout(() => calculatorEl.classList.remove('shimmering'), durationMs);
     }
-
     triggerShimmer(5000);
-    renderHistory();
 
     function updateDisplay() {
       const len = currentInput.length;
       if (len > 9) resultDisplay.style.fontSize = '38px';
       else if (len > 6) resultDisplay.style.fontSize = '48px';
       else resultDisplay.style.fontSize = '64px';
-
       resultDisplay.textContent = formatNumber(currentInput);
       clearBtn.textContent = (currentInput !== '0' || previousInput !== '') ? 'C' : 'AC';
     }
@@ -501,9 +232,7 @@
 
     function toggleSign() {
       if (currentInput === '0' || currentInput === 'Error') return;
-      currentInput = currentInput.startsWith('-')
-        ? currentInput.slice(1)
-        : '-' + currentInput;
+      currentInput = currentInput.startsWith('-') ? currentInput.slice(1) : '-' + currentInput;
       if (operator !== null && !shouldResetScreen) {
         expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
       }
@@ -523,10 +252,7 @@
       if (currentInput === 'Error') return;
       if (operator !== null && !shouldResetScreen) {
         const resultVal = computeValue(parseFloat(previousInput), parseFloat(currentInput), operator);
-        if (resultVal === 'Error') {
-          showError();
-          return;
-        }
+        if (resultVal === 'Error') { showError(); return; }
         previousInput = String(resultVal);
         currentInput = previousInput;
       } else {
@@ -535,7 +261,6 @@
       operator = op;
       shouldResetScreen = true;
       expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator}`;
-
       clearActiveOperator();
       if (btnElement) btnElement.classList.add('active');
       updateDisplay();
@@ -570,9 +295,7 @@
 
     function calculate() {
       if (currentInput === 'Error') return;
-
       let prev, current, activeOp;
-
       if (operator !== null) {
         prev = parseFloat(previousInput);
         current = shouldResetScreen ? prev : parseFloat(currentInput);
@@ -586,26 +309,63 @@
       } else {
         return;
       }
-
       const resultVal = computeValue(prev, current, activeOp);
-      if (resultVal === 'Error') {
-        showError();
-        return;
-      }
+      if (resultVal === 'Error') { showError(); return; }
 
-      const fullExpr = `${formatNumber(String(prev))} ${activeOp} ${formatNumber(String(current))} =`;
-      expressionDisplay.textContent = fullExpr;
+      const exprText = `${formatNumber(String(prev))} ${activeOp} ${formatNumber(String(current))}`;
+      expressionDisplay.textContent = exprText + ' =';
       currentInput = String(resultVal);
-      addHistoryEntry(fullExpr, currentInput);
-
       previousInput = '';
       operator = null;
       shouldResetScreen = true;
       clearActiveOperator();
       updateDisplay();
+
+      // Save to history (defined by the module script below)
+      if (window.saveHistory) window.saveHistory(exprText, currentInput);
     }
 
+    // Load a history entry back onto the display
+    window.recallHistory = function (resultStr) {
+      currentInput = resultStr;
+      previousInput = '';
+      operator = null;
+      shouldResetScreen = true;
+      expressionDisplay.textContent = '';
+      clearActiveOperator();
+      updateDisplay();
+    };
+
+    // History panel open/close (kept here so it works even if Firebase fails to load)
+    window.openHistoryPanel = function () {
+      const p = document.getElementById('history-panel');
+      p.classList.add('open');
+      p.setAttribute('aria-hidden', 'false');
+      if (!window.saveHistory) {
+        document.getElementById('hist-status').textContent =
+          'Firebase has not loaded. Open this page over http(s), e.g. GitHub Pages, not as a local file.';
+      }
+    };
+    window.closeHistoryPanel = function () {
+      const p = document.getElementById('history-panel');
+      p.classList.remove('open');
+      p.setAttribute('aria-hidden', 'true');
+    };
+    document.getElementById('hist-open').addEventListener('click', window.openHistoryPanel);
+    document.getElementById('hist-close').addEventListener('click', window.closeHistoryPanel);
+
+    setTimeout(() => {
+      if (!window.firebaseReady) {
+        document.getElementById('auth-error').textContent =
+          'Sign-in could not load. Open this page over http(s), e.g. GitHub Pages, not as a local file.';
+      }
+    }, 6000);
+
     document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.target && e.target.closest && e.target.closest('input')) return;
+      if (!document.getElementById('auth-overlay').classList.contains('hidden')) return;
+      if (document.getElementById('history-panel').classList.contains('open')) return;
       if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
       if (e.key === '.') appendDecimal();
       if (e.key === 'Backspace') handleBackspace();
@@ -616,6 +376,140 @@
       if (e.key === '*') chooseOperator('×', document.querySelector('[data-op="×"]'));
       if (e.key === '/') { e.preventDefault(); chooseOperator('÷', document.querySelector('[data-op="÷"]')); }
     });
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
+             createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAQGgUda3Io6HpDYWBWdqIV1rC6M75rk4",
+      authDomain: "nexus-40e33.firebaseapp.com",
+      databaseURL: "https://nexus-40e33-default-rtdb.firebaseio.com",
+      projectId: "nexus-40e33",
+      storageBucket: "nexus-40e33.firebasestorage.app",
+      messagingSenderId: "144604648056",
+      appId: "1:144604648056:web:d1f12fe2f4876f4ffed38d",
+      measurementId: "G-QNN58MFXKH"
+    };
+
+    const listEl = document.getElementById('hist-list');
+    const statusEl = document.getElementById('hist-status');
+    const authEl = document.getElementById('auth-overlay');
+    const authErr = document.getElementById('auth-error');
+    const emailEl = document.getElementById('auth-email');
+    const passEl = document.getElementById('auth-password');
+    const userEl = document.getElementById('hist-user');
+    const closePanel = window.closeHistoryPanel;
+
+    const messages = {
+      'auth/invalid-email': 'Enter a valid email address.',
+      'auth/missing-password': 'Enter your password.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/email-already-in-use': 'An account with this email already exists. Sign in instead.',
+      'auth/invalid-credential': 'Email or password is incorrect.',
+      'auth/user-not-found': 'No account with this email. Create one instead.',
+      'auth/wrong-password': 'Email or password is incorrect.',
+      'auth/too-many-requests': 'Too many attempts. Try again later.',
+      'auth/popup-closed-by-user': 'Google sign-in was closed before finishing.',
+      'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups and try again.',
+      'auth/operation-not-allowed': 'This sign-in method is not enabled in Firebase yet.',
+      'auth/unauthorized-domain': 'This website is not on Firebase\u2019s authorized domains list.'
+    };
+    function showAuthError(err) {
+      authErr.textContent = messages[err.code] || ('Something went wrong (' + (err.code || err.message) + ').');
+    }
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    function render(items) {
+      listEl.innerHTML = '';
+      if (!items.length) {
+        const li = document.createElement('li');
+        li.className = 'hist-empty';
+        li.textContent = 'No calculations yet.';
+        listEl.appendChild(li);
+        return;
+      }
+      items.slice().reverse().forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'hist-item';
+        const ex = document.createElement('div');
+        ex.className = 'h-expr';
+        ex.textContent = item.expression + ' =';
+        const rs = document.createElement('div');
+        rs.className = 'h-res';
+        rs.textContent = item.result.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        li.append(ex, rs);
+        li.addEventListener('click', () => { window.recallHistory(item.result); closePanel(); });
+        listEl.appendChild(li);
+      });
+    }
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const auth = getAuth(app);
+      window.firebaseReady = true;
+
+      let currentUser = null;
+      let unsubscribe = null;
+
+      window.saveHistory = (expression, result) => {
+        if (!currentUser) return;
+        push(ref(db, 'history/' + currentUser.uid), { expression, result, time: serverTimestamp() })
+          .catch(err => setStatus("Couldn't save: " + err.code));
+      };
+
+      onAuthStateChanged(auth, user => {
+        currentUser = user;
+        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+        if (user) {
+          authErr.textContent = '';
+          passEl.value = '';
+          authEl.classList.add('hidden');
+          userEl.textContent = user.email || user.displayName || '';
+          unsubscribe = onValue(
+            query(ref(db, 'history/' + user.uid), limitToLast(50)),
+            snap => {
+              const items = [];
+              snap.forEach(child => items.push(child.val()));
+              render(items);
+              setStatus('');
+            },
+            err => setStatus("Couldn't load history: " + err.code)
+          );
+        } else {
+          closePanel();
+          handleClear();
+          render([]);
+          userEl.textContent = '';
+          authEl.classList.remove('hidden');
+        }
+      });
+
+      document.getElementById('auth-form').addEventListener('submit', e => {
+        e.preventDefault();
+        authErr.textContent = '';
+        signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value).catch(showAuthError);
+      });
+      document.getElementById('auth-signup').addEventListener('click', () => {
+        authErr.textContent = '';
+        createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value).catch(showAuthError);
+      });
+      document.getElementById('auth-google').addEventListener('click', () => {
+        authErr.textContent = '';
+        signInWithPopup(auth, new GoogleAuthProvider()).catch(showAuthError);
+      });
+      document.getElementById('hist-signout').addEventListener('click', () => {
+        signOut(auth).catch(err => setStatus("Couldn't sign out: " + err.code));
+      });
+    } catch (err) {
+      authErr.textContent = 'Sign-in is unavailable right now.';
+    }
   </script>
 </body>
 </html>
