@@ -8,12 +8,14 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; min-height: 100%; }
   body {
-    display: grid; place-items: center; min-height: 100dvh; padding: 16px;
+    display: flex; justify-content: center; align-items: center; min-height: 100vh; min-height: 100dvh; padding: 16px;
     background: #000; color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
   }
-  .calc { width: min(100%, 390px, max(260px, calc((100dvh - 190px) * .8 + 68px))); }
-  .calc.sci { width: min(100%, 860px, max(380px, calc((100dvh - 170px) * 1.8 + 120px))); }
+  .calc { flex: none; width: min(390px, calc(100vw - 32px)); }
+  .calc { width: min(390px, calc(100vw - 32px), max(260px, calc((100dvh - 190px) * .8 + 68px))); }
+  .calc.sci { width: min(860px, calc(100vw - 32px)); }
+  .calc.sci { width: min(860px, calc(100vw - 32px), max(380px, calc((100dvh - 170px) * 1.8 + 120px))); }
   .top { height: 30px; display: flex; gap: 8px; }
   .mode {
     background: none; border: 1px solid #3a3a3c; color: #8e8e93; border-radius: 999px;
@@ -234,7 +236,8 @@ function setSci(on) {
 modeBtn.addEventListener("click", () => setSci(!calc.classList.contains("sci")));
 const mq = matchMedia("(min-width: 700px)");
 setSci(mq.matches);
-mq.addEventListener("change", e => setSci(e.matches));
+if (mq.addEventListener) mq.addEventListener("change", e => setSci(e.matches));
+else if (mq.addListener) mq.addListener(e => setSci(e.matches));
 
 // ---- Shimmer: runs for 5 seconds on load (and again from the Shimmer button) ----
 let shimTimer;
