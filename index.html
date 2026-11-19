@@ -2,206 +2,255 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Calculator</title>
 <style>
-  :root{
-    --bg:#000; --num:#333333; --num-hi:#737373;
-    --fn:#A5A5A5; --fn-hi:#D9D9D9;
-    --op:#FF9F0A; --op-hi:#FFC76B;
-    --gap:12px;
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    display: grid; place-items: center; min-height: 100dvh; padding: 16px;
+    background: #000; color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
   }
-  *,*::before,*::after{box-sizing:border-box}
-  html,body{height:100%;margin:0}
-  body{
-    background:var(--bg);color:#fff;display:flex;justify-content:center;align-items:flex-end;
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
-    padding:env(safe-area-inset-top,0) 16px calc(16px + env(safe-area-inset-bottom,0));
-    -webkit-user-select:none;user-select:none;
+  .calc { width: min(100%, 390px, max(260px, calc((100dvh - 190px) * .8 + 68px))); }
+  .calc.sci { width: min(100%, 860px, max(380px, calc((100dvh - 170px) * 1.8 + 120px))); }
+  .top { height: 30px; display: flex; gap: 8px; }
+  .mode {
+    background: none; border: 1px solid #3a3a3c; color: #8e8e93; border-radius: 999px;
+    padding: 3px 12px; font: inherit; font-size: 13px; cursor: pointer;
   }
-  .calc{width:100%;max-width:390px}
-  .display{
-    height:150px;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;
-    padding:0 10px 8px;overflow:hidden;
+  .mode[aria-pressed="true"] { color: #fff; border-color: #8e8e93; }
+  .display {
+    height: 96px; display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 0 8px 8px; overflow: hidden; user-select: none; touch-action: pan-y;
   }
-  #expr{
-    width:100%;text-align:right;font-size:26px;font-weight:300;color:#A5A5A5;
-    white-space:nowrap;overflow:hidden;margin-bottom:6px;min-height:32px;
+  #out { font-weight: 300; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .calc.sci .keys { grid-template-columns: repeat(5, 1fr) 0 repeat(4, 1fr); }
+  .sci, .gap { display: none; }
+  .calc.sci .sci, .calc.sci .gap { display: block; }
+  .keys button {
+    aspect-ratio: 1; min-width: 0; padding: 0; border: 0; border-radius: 50%;
+    font: inherit; font-size: 30px; color: #fff; background: #333; cursor: pointer;
+    transition: filter .3s, background .25s, color .25s;
   }
-  #out{font-size:80px;font-weight:300;line-height:1;white-space:nowrap}
-  .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
-  button{
-    appearance:none;border:0;border-radius:50%;aspect-ratio:1;font:inherit;font-size:32px;
-    color:#fff;background:var(--num);cursor:pointer;display:flex;align-items:center;justify-content:center;
-    transition:background .25s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  .keys .fn { background: #a5a5a5; color: #000; }
+  .keys .op { background: #ff9f0a; }
+  .keys .sci { background: #212123; }
+  .keys .op.on { background: #fff; color: #ff9f0a; }
+  .keys .sci.on { background: #fff; color: #000; }
+  .keys button:active, .keys button.press { filter: brightness(1.55); transition: none; }
+  .keys button:focus-visible, .mode:focus-visible { outline: 3px solid #5ac8fa; outline-offset: 2px; }
+  .keys .zero { grid-column: span 2; aspect-ratio: auto; border-radius: 999px; text-align: left; padding-left: 20%; }
+  .calc.sci .keys button { font-size: clamp(15px, 2.4vw, 26px); }
+  .calc.sci .keys .sci { font-size: clamp(11px, 1.7vw, 19px); }
+  /* Shimmer: a light band sweeps across every button, the display and the pills,
+     clipped to each element's own shape (circles, the pill-shaped 0 key, etc.) */
+  .keys button, .display, .mode { position: relative; overflow: hidden; }
+  .keys button::after, .display::after, .mode::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    opacity: 0; transition: opacity .4s;
+    --shine: rgba(255, 255, 255, .5);
+    background: linear-gradient(110deg, transparent 35%, var(--shine) 50%, transparent 65%) 100% 0 / 250% 100% no-repeat;
   }
-  button:active,button.hit{background:var(--num-hi);transition:none}
-  button.fn{background:var(--fn);color:#000}
-  button.fn:active,button.fn.hit{background:var(--fn-hi)}
-  button.op{background:var(--op);font-size:40px}
-  button.op:active,button.op.hit{background:var(--op-hi);transition:none}
-  button.op.on{background:#fff;color:var(--op)}
-  button:focus-visible{outline:3px solid #fff;outline-offset:2px}
-  @media (prefers-reduced-motion:reduce){button{transition:none}}
-  @media (max-height:640px){#out{font-size:64px}button{font-size:26px}button.op{font-size:32px}}
+  .display::after { border-radius: 18px; --shine: rgba(255, 255, 255, .16); }
+  .calc.shimmer .keys button::after, .calc.shimmer .display::after, .calc.shimmer .mode::after {
+    opacity: 1; animation: sweep 1.6s linear var(--d, 0s) infinite;
+  }
+  @keyframes sweep { to { background-position: 0 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .keys button { transition: none; }
+    .calc.shimmer :is(.keys button, .display, .mode)::after { animation: none; }
+  }
 </style>
 </head>
 <body>
-<main class="calc" aria-label="Calculator">
-  <div class="display" role="status" aria-live="polite"><div id="expr">&nbsp;</div><div id="out">0</div></div>
-  <div class="keys" id="keys">
-    <button class="fn" id="ac" data-k="AC" aria-label="Clear">AC</button>
-    <button class="fn" data-k="NEG" aria-label="Change sign">+/&minus;</button>
-    <button class="fn" data-k="%" aria-label="Percent">%</button>
-    <button class="op" data-k="/" aria-label="Divide">&divide;</button>
-
-    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
-    <button class="op" data-k="*" aria-label="Multiply">&times;</button>
-
-    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
-    <button class="op" data-k="-" aria-label="Subtract">&minus;</button>
-
-    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
-    <button class="op" data-k="+" aria-label="Add">+</button>
-
-    <button class="fn" data-k="BK" aria-label="Delete last digit">&#9003;</button>
-    <button data-k=".">.</button>
-    <button data-k="0">0</button>
-    <button class="op" data-k="=" aria-label="Equals">=</button>
-  </div>
+<main class="calc" id="calc" aria-label="Calculator">
+  <div class="top"><button class="mode" id="mode" aria-pressed="false">Scientific</button><button class="mode" id="replay">Shimmer</button></div>
+  <div class="display" id="disp" title="Swipe to delete the last digit"><span id="out" aria-live="polite">0</span></div>
+  <div class="keys" id="keys"></div>
 </main>
 
 <script>
-(function () {
-  var cur = "0", acc = null, op = null, fresh = false, err = false;
-  var exp = "", eqLine = "";
-  var SYM = { "+": "+", "-": "\u2212", "*": "\u00D7", "/": "\u00F7" };
-  var expEl = document.getElementById("expr");
-  var lastOp = null, lastB = null;
-  var out = document.getElementById("out");
-  var acBtn = document.getElementById("ac");
+const $ = id => document.getElementById(id);
+const keys = $("keys"), out = $("out"), calc = $("calc"), modeBtn = $("mode");
 
-  function num(n) { return String(Number(n.toPrecision(9))); }
-  function fmt(s) {
-    if (err) return "Error";
-    var neg = s[0] === "-"; if (neg) s = s.slice(1);
-    if (/e/i.test(s)) return (neg ? "-" : "") + s;
-    var p = s.split(".");
-    var i = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return (neg ? "-" : "") + i + (p.length > 1 ? "." + p[1] : "");
-  }
-  function fit() {
-    out.style.fontSize = "";
-    var box = out.parentElement, size = parseFloat(getComputedStyle(out).fontSize);
-    while (out.scrollWidth > box.clientWidth - 20 && size > 28) {
-      size -= 2; out.style.fontSize = size + "px";
-    }
-  }
-  function render() {
-    out.textContent = fmt(cur);
-    var line = eqLine || (exp + (op && !fresh && !err ? fmt(cur) : ""));
-    expEl.textContent = line || "\u00A0";
-    expEl.scrollLeft = expEl.scrollWidth;
-    fit();
-    acBtn.textContent = (cur === "0" && !fresh) || err ? "AC" : "C";
-    document.querySelectorAll("button.op").forEach(function (b) {
-      b.classList.toggle("on", !!op && fresh && b.dataset.k === op);
-    });
-  }
-  function calc(a, o, b) {
-    if (o === "+") return a + b;
-    if (o === "-") return a - b;
-    if (o === "*") return a * b;
-    return b === 0 ? null : a / b;
-  }
-  function fail() { exp = ""; eqLine = ""; err = true; cur = "0"; acc = null; op = null; lastOp = null; fresh = true; }
-  function reset() { exp = ""; eqLine = ""; cur = "0"; acc = null; op = null; fresh = false; err = false; lastOp = null; lastB = null; }
+// Key layout: [key, label, class]
+const BASIC = [
+  [["clear","AC","fn"],["sign","±","fn"],["percent","%","fn"],["÷","÷","op"]],
+  [["7"],["8"],["9"],["×","×","op"]],
+  [["4"],["5"],["6"],["−","−","op"]],
+  [["1"],["2"],["3"],["+","+","op"]],
+  [["0","0","zero"],["."],["equals","=","op"]]
+];
+const SCI = [
+  ["mc","m+","m−","mr","Rand"],
+  ["x²","x³","^:xʸ","eˣ","10ˣ"],
+  ["1/x","√","∛","ln","log"],
+  ["x!","sin","cos","tan","e"],
+  ["deg:Rad","sinh","cosh","tanh","π"]
+];
+const LABELS = { "÷":"Divide","×":"Multiply","−":"Subtract","+":"Add","^":"x to the power of y",
+  sign:"Plus minus", percent:"Percent", clear:"Clear", equals:"Equals", deg:"Switch radians and degrees",
+  mc:"Memory clear", "m+":"Memory add", "m−":"Memory subtract", mr:"Memory recall" };
 
-  function digit(d) {
-    if (err) reset();
-    if (fresh) { if (!op) exp = ""; cur = d; fresh = false; }
-    else if (cur.replace(/[-.]/g, "").length < 9) cur = cur === "0" ? d : cur === "-0" ? "-" + d : cur + d;
+function make(k, label, cls) {
+  const b = document.createElement("button");
+  b.dataset.k = k; b.textContent = label || k; b.className = cls || "";
+  if (LABELS[k]) b.setAttribute("aria-label", LABELS[k]);
+  keys.appendChild(b);
+}
+BASIC.forEach((row, r) => {
+  SCI[r].forEach(s => { const [k, l] = s.split(":"); make(k, l, "sci"); });
+  const gap = document.createElement("i"); gap.className = "gap"; gap.setAttribute("aria-hidden", "true");
+  keys.appendChild(gap);
+  row.forEach(([k, l, c]) => make(k, l, c));
+});
+const clr = keys.querySelector('[data-k="clear"]');
+const degBtn = keys.querySelector('[data-k="deg"]');
+
+// ---- Calculator state (iPhone-style: operations run as you go) ----
+let cur = "0";        // value on screen
+let typing = false;   // user is mid-entry
+let fresh = false;    // cur is a new operand not yet used
+let acc = null, op = null, last = null; // last = [op, operand] for repeated "="
+let mem = 0, deg = false;
+
+const num = () => parseFloat(cur);
+const len = () => cur.replace(/[-.]/g, "").length;
+function setNum(n) {
+  typing = false;
+  if (isFinite(n)) cur = String(parseFloat(n.toPrecision(12)));
+  else { cur = "Error"; acc = op = last = null; fresh = false; }
+}
+const calcOp = (a, o, b) => o === "+" ? a + b : o === "−" ? a - b : o === "×" ? a * b : o === "÷" ? a / b : Math.pow(a, b);
+const trig = f => x => { const r = f(deg ? x * Math.PI / 180 : x); return Math.abs(r) < 1e-14 ? 0 : r; };
+const fact = x => { if (x < 0 || x % 1 || x > 170) return NaN; let r = 1; for (let i = 2; i <= x; i++) r *= i; return r; };
+const F = {
+  "x²": x => x * x, "x³": x => x ** 3, "eˣ": Math.exp, "10ˣ": x => 10 ** x, "1/x": x => 1 / x,
+  "√": Math.sqrt, "∛": Math.cbrt, "ln": Math.log, "log": Math.log10, "x!": fact,
+  sin: trig(Math.sin), cos: trig(Math.cos), tan: trig(Math.tan),
+  sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh
+};
+
+function group(s) {
+  const [n, d] = s.split(".");
+  return n.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (d === undefined ? "" : "." + d);
+}
+
+function show() {
+  let t = cur;
+  if (cur !== "Error") {
+    const n = num();
+    t = typing ? group(cur)
+      : (n !== 0 && (Math.abs(n) >= 1e9 || Math.abs(n) < 1e-6))
+        ? n.toExponential(5).replace(/\.?0+e/, "e").replace("e+", "e")
+        : n.toLocaleString("en-US", { maximumSignificantDigits: 9 });
   }
-  function dot() {
-    if (err) reset();
-    if (fresh) { if (!op) exp = ""; cur = "0."; fresh = false; }
-    else if (cur.indexOf(".") < 0) cur += ".";
+  out.textContent = t;
+  const L = t.length, f = L <= 6 ? 1 : L <= 7 ? .88 : L <= 8 ? .78 : L <= 9 ? .7 : L <= 11 ? .58 : .48;
+  out.style.fontSize = (calc.classList.contains("sci") ? 64 : 80) * f + "px";
+  for (const b of keys.children) {
+    const k = b.dataset.k;
+    b.classList.toggle("on", (op === k && !fresh) || (k === "mr" && mem !== 0));
   }
-  function operate(o) {
-    if (err) return;
-    if (op && fresh) {
-      exp = exp.replace(/\S\s$/, SYM[o] + " ");
-    } else if (op) {
-      var r = calc(acc, op, parseFloat(cur));
-      if (r === null) return fail();
-      exp += fmt(num(parseFloat(cur))) + " " + SYM[o] + " ";
-      acc = Number(r.toPrecision(9)); cur = num(acc);
-    } else {
-      acc = parseFloat(cur);
-      exp = fmt(num(acc)) + " " + SYM[o] + " ";
-    }
-    op = o; fresh = true;
-  }
-  function equals() {
-    if (err) return;
-    var r, line;
-    if (op) {
-      var b = parseFloat(cur);
-      r = calc(acc, op, b);
-      if (r === null) return fail();
-      line = exp + fmt(num(b)) + " = ";
-      lastOp = op; lastB = b; op = null; acc = null;
-    } else if (lastOp) {
-      var a = parseFloat(cur);
-      r = calc(a, lastOp, lastB);
-      if (r === null) return fail();
-      line = fmt(num(a)) + " " + SYM[lastOp] + " " + fmt(num(lastB)) + " = ";
-    } else return;
-    cur = num(r); fresh = true; exp = "";
-    eqLine = line + fmt(cur);
-  }
-  function percent() {
-    if (err) return;
-    var v = parseFloat(cur);
-    cur = num(op && (op === "+" || op === "-") && acc !== null ? acc * v / 100 : v / 100);
+  clr.textContent = typing && cur !== "0" ? "C" : "AC";
+  degBtn.textContent = deg ? "Deg" : "Rad";
+}
+
+function press(k) {
+  const isDigit = /^[0-9]$/.test(k);
+  if (cur === "Error" && !isDigit && k !== "." && k !== "clear") return;
+
+  if (isDigit) {
+    if (!typing) { cur = k; typing = true; }
+    else if (len() < 9) cur = cur === "0" ? k : cur === "-0" ? "-" + k : cur + k;
+    fresh = true;
+  } else if (k === ".") {
+    if (!typing) { cur = "0."; typing = true; }
+    else if (!cur.includes(".") && len() < 9) cur += ".";
+    fresh = true;
+  } else if (k === "clear") {
+    if (typing && cur !== "0") { cur = "0"; typing = false; }          // C: clear entry
+    else { cur = "0"; typing = false; fresh = false; acc = op = last = null; } // AC: clear all
+  } else if ("+−×÷^".includes(k)) {
+    if (op && fresh) { setNum(calcOp(acc, op, num())); if (cur === "Error") return show(); }
+    acc = num(); op = k; fresh = false; typing = false;
+  } else if (k === "equals") {
+    if (op) { const b = num(); last = [op, b]; setNum(calcOp(acc, op, b)); op = null; }
+    else if (last) setNum(calcOp(num(), last[0], last[1]));
     fresh = false;
-  }
-  function press(k) {
-    if (k !== "=") eqLine = "";
-    if (/^\d$/.test(k)) digit(k);
-    else if (k === ".") dot();
-    else if (k === "AC") {
-      if (acBtn.textContent === "C") { cur = "0"; fresh = false; }
-      else reset();
-    }
-    else if (k === "BK") { if (!fresh && !err) cur = cur.length > 1 && !(cur.length === 2 && cur[0] === "-") ? cur.slice(0, -1) : "0"; }
-    else if (k === "NEG") { if (!err && cur !== "0") cur = cur[0] === "-" ? cur.slice(1) : "-" + cur; }
-    else if (k === "%") percent();
-    else if (k === "=") equals();
-    else if (k === "+" || k === "-" || k === "*" || k === "/") operate(k);
-    render();
-  }
+  } else if (k === "percent") {
+    setNum(op === "+" || op === "−" ? acc * num() / 100 : num() / 100); fresh = true;
+  } else if (k === "sign") {
+    if (typing) cur = cur[0] === "-" ? cur.slice(1) : "-" + cur; else setNum(-num());
+    fresh = true;
+  } else if (k === "back") {
+    if (typing) { cur = cur.slice(0, -1); if (cur === "" || cur === "-") cur = "0"; }
+  } else if (k === "mc") { mem = 0; }
+  else if (k === "m+") { mem += num(); typing = false; }
+  else if (k === "m−") { mem -= num(); typing = false; }
+  else if (k === "mr") { setNum(mem); fresh = true; }
+  else if (k === "deg") { deg = !deg; }
+  else if (k === "π") { setNum(Math.PI); fresh = true; }
+  else if (k === "e") { setNum(Math.E); fresh = true; }
+  else if (k === "Rand") { setNum(Math.random()); fresh = true; }
+  else if (F[k]) { setNum(F[k](num())); fresh = true; }
+  show();
+}
 
-  document.getElementById("keys").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (b) press(b.dataset.k);
+// ---- Input: clicks, keyboard, swipe on display ----
+keys.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (b) press(b.dataset.k);
+});
+
+const KEYMAP = { "*":"×", "/":"÷", "-":"−", "+":"+", "^":"^", "Enter":"equals", "=":"equals",
+  "Backspace":"back", "Escape":"clear", "Delete":"clear", "%":"percent", ".":".", ",":"." };
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = /^[0-9]$/.test(e.key) ? e.key : KEYMAP[e.key];
+  if (!k) return;
+  e.preventDefault();
+  const b = keys.querySelector('[data-k="' + k + '"]');
+  if (b) { b.classList.add("press"); setTimeout(() => b.classList.remove("press"), 110); }
+  press(k);
+});
+
+let sx = null;
+const disp = $("disp");
+disp.addEventListener("pointerdown", e => { sx = e.clientX; });
+disp.addEventListener("pointerup", e => {
+  if (sx !== null && Math.abs(e.clientX - sx) > 30) press("back");
+  sx = null;
+});
+
+// ---- Scientific mode: on for wide screens (like rotating an iPhone), with a manual toggle ----
+function setSci(on) {
+  calc.classList.toggle("sci", on);
+  modeBtn.setAttribute("aria-pressed", String(on));
+  show();
+}
+modeBtn.addEventListener("click", () => setSci(!calc.classList.contains("sci")));
+const mq = matchMedia("(min-width: 700px)");
+setSci(mq.matches);
+mq.addEventListener("change", e => setSci(e.matches));
+
+// ---- Shimmer: runs for 5 seconds on load (and again from the Shimmer button) ----
+let shimTimer;
+function shimmer(ms = 5000) {
+  const box = calc.getBoundingClientRect();
+  calc.querySelectorAll(".keys button, .display, .mode").forEach(el => {
+    const r = el.getBoundingClientRect();
+    const f = ((r.left + r.width / 2 - box.left) / box.width + (r.top + r.height / 2 - box.top) / box.height) / 2;
+    el.style.setProperty("--d", (Math.max(0, Math.min(1, f)) * 1.1).toFixed(2) + "s"); // diagonal wave
   });
-  document.addEventListener("keydown", function (e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    var k = e.key, id = k;
-    if (k === "Enter") { k = id = "="; e.preventDefault(); }
-    else if (k === "Backspace") { k = "BK"; id = null; }
-    else if (k === "Escape" || k === "Delete" || k === "c" || k === "C") { k = id = "AC"; }
-    else if (k === "x" || k === "X") { k = id = "*"; }
-    else if (k === ",") { k = id = "."; }
-    else if (!(/^\d$/.test(k) || k === "." || k === "=" || k === "%" || "+-*/".indexOf(k) > -1)) return;
-    if (k === "/") e.preventDefault();
-    press(k);
-    var btn = id && document.querySelector('button[data-k="' + id + '"]');
-    if (btn) { btn.classList.add("hit"); setTimeout(function () { btn.classList.remove("hit"); }, 120); }
-  });
-  window.addEventListener("resize", fit);
-  render();
-})();
+  calc.classList.add("shimmer");
+  clearTimeout(shimTimer);
+  shimTimer = setTimeout(() => calc.classList.remove("shimmer"), ms - 400); // + 0.4s fade-out = 5s total
+}
+$("replay").addEventListener("click", () => shimmer());
+shimmer();
 </script>
 </body>
 </html>
