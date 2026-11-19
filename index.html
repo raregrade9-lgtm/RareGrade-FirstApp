@@ -16,46 +16,10 @@
     body {
       background: radial-gradient(circle at top, #2c2c30 0%, #141416 70%);
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      gap: 14px;
       padding: 20px;
-    }
-
-    .ui-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 340px;
-      padding: 0 6px;
-    }
-
-    .ui-badge {
-      color: #a1a1aa;
-      font-size: 12px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .shimmer-btn {
-      background: rgba(255, 255, 255, 0.08);
-      color: #f4f4f5;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      height: auto;
-      width: auto;
-      transition: background-color 0.2s ease, transform 0.15s ease;
-    }
-
-    .shimmer-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
     }
 
     .calculator {
@@ -182,11 +146,6 @@
 </head>
 <body>
 
-  <div class="ui-toolbar">
-    <span class="ui-badge">UI Design</span>
-    <button type="button" class="shimmer-btn" onclick="triggerShimmer(5000)">Shimmer 5s</button>
-  </div>
-
   <div class="calculator shimmering" id="calculator">
     <div class="display">
       <div class="expression" id="expression"></div>
@@ -238,7 +197,6 @@
     function triggerShimmer(durationMs = 5000) {
       clearTimeout(shimmerTimer);
       calculatorEl.classList.remove('shimmering');
-      // Force reflow so animation restarts cleanly
       void calculatorEl.offsetWidth;
       calculatorEl.classList.add('shimmering');
       shimmerTimer = setTimeout(() => {
