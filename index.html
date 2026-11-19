@@ -25,8 +25,21 @@
     /* History */
     .hist-toggle { position: absolute; top: 20px; left: 24px; z-index: 5; width: 36px; height: 36px; border-radius: 50%; border: none; background: #333; color: #ff9f0a; font-size: 18px; cursor: pointer; }
     .hist-toggle:active { filter: brightness(135%); }
-    .logout-btn { position: absolute; top: 20px; right: 24px; z-index: 5; height: 36px; padding: 0 16px; border-radius: 18px; border: none; background: #333; color: #ff9f0a; font-size: 15px; cursor: pointer; }
-    .logout-btn:active { filter: brightness(135%); }
+    .avatar-wrap { position: absolute; top: 20px; right: 24px; z-index: 6; }
+    .avatar-btn { width: 36px; height: 36px; border-radius: 50%; border: none; padding: 0; overflow: hidden; background: #ff9f0a; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .avatar-btn:active { filter: brightness(135%); }
+    .avatar-btn img, .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-menu { position: absolute; top: 44px; right: 0; min-width: 150px; background: #1c1c1e; border: 1px solid #2a2a2e; border-radius: 14px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
+    .avatar-menu button { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 10px; color: #fff; font-size: 16px; padding: 10px 12px; cursor: pointer; }
+    .avatar-menu button:hover, .avatar-menu button:focus-visible { background: #2c2c30; outline: none; }
+    .avatar-menu #menu-logout { color: #ff453a; }
+    .profile-body { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 24px; }
+    .profile-avatar { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; background: #ff9f0a; color: #fff; font-size: 38px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .profile-name { color: #fff; font-size: 22px; font-weight: 600; }
+    .profile-email { color: #8e8e93; font-size: 15px; word-break: break-all; text-align: center; }
+    .profile-meta { align-self: stretch; margin-top: 24px; }
+    .profile-meta dt { color: #8e8e93; font-size: 13px; margin-top: 14px; }
+    .profile-meta dd { color: #fff; font-size: 16px; border-bottom: 1px solid #2a2a2e; padding-bottom: 10px; }
     .history-panel { position: absolute; inset: 0; z-index: 20; background: rgba(10,10,12,.97); padding: 24px; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .3s ease; }
     .history-panel.open { transform: translateY(0); }
     .hist-head { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 22px; font-weight: 600; margin-bottom: 12px; }
@@ -62,7 +75,13 @@
   <div class="calculator shimmering" id="calculator">
     <button type="button" class="hist-toggle" id="hist-open" aria-label="Show history">🕘</button>
 
-    <button type="button" class="logout-btn" id="logout-btn">Log out</button>
+    <div class="avatar-wrap">
+      <button type="button" class="avatar-btn" id="avatar-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"></button>
+      <div class="avatar-menu" id="avatar-menu" role="menu" hidden>
+        <button type="button" role="menuitem" id="menu-profile">Profile</button>
+        <button type="button" role="menuitem" id="menu-logout">Log out</button>
+      </div>
+    </div>
 
     <div class="display">
       <div class="expression" id="expression"></div>
@@ -108,6 +127,22 @@
         <button type="button" class="auth-btn auth-secondary" id="auth-signup">Create account</button>
       </form>
       <div class="auth-error" id="auth-error" role="alert"></div>
+    </div>
+
+    <div class="history-panel" id="profile-panel" aria-hidden="true">
+      <div class="hist-head">
+        <span>Profile</span>
+        <button type="button" id="profile-close">Done</button>
+      </div>
+      <div class="profile-body">
+        <div class="profile-avatar" id="profile-avatar"></div>
+        <div class="profile-name" id="profile-name"></div>
+        <div class="profile-email" id="profile-email"></div>
+        <dl class="profile-meta">
+          <dt>Sign-in method</dt><dd id="profile-provider"></dd>
+          <dt>Member since</dt><dd id="profile-since"></dd>
+        </dl>
+      </div>
     </div>
 
     <div class="history-panel" id="history-panel" aria-hidden="true">
@@ -370,6 +405,8 @@
       if (e.target && e.target.closest && e.target.closest('input')) return;
       if (!document.getElementById('auth-overlay').classList.contains('hidden')) return;
       if (document.getElementById('history-panel').classList.contains('open')) return;
+      if (document.getElementById('profile-panel').classList.contains('open')) return;
+      if (!document.getElementById('avatar-menu').hidden) return;
       if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
       if (e.key === '.') appendDecimal();
       if (e.key === 'Backspace') handleBackspace();
@@ -453,6 +490,46 @@
       });
     }
 
+    const avatarBtn = document.getElementById('avatar-btn');
+    const menuEl = document.getElementById('avatar-menu');
+    const profilePanel = document.getElementById('profile-panel');
+
+    function paintAvatar(el, user) {
+      el.textContent = '';
+      const label = (user.displayName || user.email || '?').trim();
+      if (user.photoURL) {
+        const img = document.createElement('img');
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';
+        img.src = user.photoURL;
+        img.onerror = () => { el.textContent = label.charAt(0).toUpperCase(); };
+        el.appendChild(img);
+      } else {
+        el.textContent = label.charAt(0).toUpperCase();
+      }
+    }
+    function setMenu(open) {
+      menuEl.hidden = !open;
+      avatarBtn.setAttribute('aria-expanded', String(open));
+    }
+    function openProfile(user) {
+      paintAvatar(document.getElementById('profile-avatar'), user);
+      document.getElementById('profile-name').textContent = user.displayName || 'No display name';
+      document.getElementById('profile-email').textContent = user.email || '';
+      const id = user.providerData[0] && user.providerData[0].providerId;
+      document.getElementById('profile-provider').textContent =
+        id === 'google.com' ? 'Google' : id === 'password' ? 'Email and password' : (id || 'Unknown');
+      document.getElementById('profile-since').textContent = user.metadata.creationTime
+        ? new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+        : '';
+      profilePanel.classList.add('open');
+      profilePanel.setAttribute('aria-hidden', 'false');
+    }
+    function closeProfile() {
+      profilePanel.classList.remove('open');
+      profilePanel.setAttribute('aria-hidden', 'true');
+    }
+
     try {
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
@@ -476,6 +553,7 @@
           passEl.value = '';
           authEl.classList.add('hidden');
           userEl.textContent = user.email || user.displayName || '';
+          paintAvatar(avatarBtn, user);
           unsubscribe = onValue(
             query(ref(db, 'history/' + user.uid), limitToLast(50)),
             snap => {
@@ -488,6 +566,8 @@
           );
         } else {
           closePanel();
+          closeProfile();
+          setMenu(false);
           handleClear();
           render([]);
           userEl.textContent = '';
@@ -510,7 +590,12 @@
       });
       const doSignOut = () => signOut(auth).catch(err => setStatus("Couldn't sign out: " + err.code));
       document.getElementById('hist-signout').addEventListener('click', doSignOut);
-      document.getElementById('logout-btn').addEventListener('click', doSignOut);
+      avatarBtn.addEventListener('click', e => { e.stopPropagation(); setMenu(menuEl.hidden); });
+      document.getElementById('menu-profile').addEventListener('click', () => { setMenu(false); if (currentUser) openProfile(currentUser); });
+      document.getElementById('menu-logout').addEventListener('click', () => { setMenu(false); doSignOut(); });
+      document.getElementById('profile-close').addEventListener('click', closeProfile);
+      document.addEventListener('click', e => { if (!menuEl.hidden && !menuEl.contains(e.target)) setMenu(false); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menuEl.hidden) { setMenu(false); avatarBtn.focus(); } });
     } catch (err) {
       authErr.textContent = 'Sign-in is unavailable right now.';
     }
