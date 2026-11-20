@@ -1,655 +1,308 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iOS Calculator</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; user-select: none; }
-    body { background: radial-gradient(circle at top, #2c2c30 0%, #141416 70%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .calculator { position: relative; overflow: hidden; background: linear-gradient(180deg, #0b0b0d 0%, #000 100%); width: 340px; padding: 24px; border-radius: 44px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 28px 60px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.12); }
-    .calculator.shimmering::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 10; background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.06) 38%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.06) 62%, transparent 80%); transform: translateX(-140%); animation: shimmerSweep 1.25s ease-in-out 4; }
-    @keyframes shimmerSweep { 0% { transform: translateX(-140%); } 100% { transform: translateX(140%); } }
-    .display { height: 140px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; padding: 0 12px 16px; overflow: hidden; }
-    .expression { color: #8e8e93; font-size: 20px; min-height: 26px; margin-bottom: 4px; white-space: nowrap; }
-    .result { color: #fff; font-size: 64px; font-weight: 300; line-height: 1.1; white-space: nowrap; }
-    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    button.calc-key { height: 64px; width: 64px; border-radius: 50%; border: none; font-size: 28px; font-weight: 400; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: filter .15s ease, background-color .2s ease, color .2s ease, transform .1s ease; }
-    button.calc-key:active { filter: brightness(135%); transform: scale(.96); }
-    .btn-func { background-color: #a5a5a5; color: #000; font-size: 24px; }
-    .btn-num { background-color: #333; color: #fff; }
-    .btn-op { background-color: #ff9f0a; color: #fff; font-size: 32px; }
-    .btn-op.active { background-color: #fff; color: #ff9f0a; }
-    .btn-zero { text-align: center; }
-
-    /* History */
-    .hist-toggle { position: absolute; top: 20px; left: 24px; z-index: 5; width: 36px; height: 36px; border-radius: 50%; border: none; background: #333; color: #ff9f0a; font-size: 18px; cursor: pointer; }
-    .hist-toggle:active { filter: brightness(135%); }
-    .avatar-wrap { position: absolute; top: 20px; right: 24px; z-index: 6; }
-    .avatar-btn { width: 36px; height: 36px; border-radius: 50%; border: none; padding: 0; overflow: hidden; background: #ff9f0a; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .avatar-btn:active { filter: brightness(135%); }
-    .avatar-btn img, .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-menu { position: absolute; top: 44px; right: 0; min-width: 150px; background: #1c1c1e; border: 1px solid #2a2a2e; border-radius: 14px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
-    .avatar-menu button { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 10px; color: #fff; font-size: 16px; padding: 10px 12px; cursor: pointer; }
-    .avatar-menu button:hover, .avatar-menu button:focus-visible { background: #2c2c30; outline: none; }
-    .avatar-menu #menu-logout { color: #ff453a; }
-    .profile-body { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 24px; }
-    .profile-avatar { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; background: #ff9f0a; color: #fff; font-size: 38px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-    .profile-change { padding: 0 24px; height: 40px; font-size: 15px; margin: 4px 0; }
-    .profile-change:disabled { opacity: .5; cursor: default; }
-    .profile-status { color: #8e8e93; font-size: 13px; min-height: 18px; text-align: center; }
-    .profile-status.error { color: #ff453a; }
-    .profile-name { color: #fff; font-size: 22px; font-weight: 600; }
-    .profile-email { color: #8e8e93; font-size: 15px; word-break: break-all; text-align: center; }
-    .profile-meta { align-self: stretch; margin-top: 24px; }
-    .profile-meta dt { color: #8e8e93; font-size: 13px; margin-top: 14px; }
-    .profile-meta dd { color: #fff; font-size: 16px; border-bottom: 1px solid #2a2a2e; padding-bottom: 10px; }
-    .history-panel { position: absolute; inset: 0; z-index: 20; background: rgba(10,10,12,.97); padding: 24px; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .3s ease; }
-    .history-panel.open { transform: translateY(0); }
-    .hist-head { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 22px; font-weight: 600; margin-bottom: 12px; }
-    .hist-head button { background: none; border: none; color: #ff9f0a; font-size: 16px; cursor: pointer; padding: 6px; }
-    .hist-list { flex: 1; overflow-y: auto; list-style: none; }
-    .hist-item { padding: 12px 4px; border-bottom: 1px solid #2a2a2e; cursor: pointer; text-align: right; }
-    .hist-item:active { background: #1c1c1e; }
-    .hist-item .h-expr { color: #8e8e93; font-size: 15px; }
-    .hist-item .h-res { color: #fff; font-size: 26px; font-weight: 300; }
-    .hist-empty { color: #8e8e93; text-align: center; margin-top: 40px; }
-    .hist-status { color: #8e8e93; font-size: 12px; text-align: center; padding-top: 8px; min-height: 22px; }
-    input { user-select: text; -webkit-user-select: text; }
-    .auth-overlay { position: absolute; inset: 0; z-index: 30; background: #000; padding: 32px 28px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-    .auth-overlay.hidden { display: none; }
-    .auth-overlay h1 { color: #fff; font-size: 28px; font-weight: 600; }
-    .auth-overlay p { color: #8e8e93; font-size: 14px; margin-bottom: 6px; }
-    .auth-overlay form { display: flex; flex-direction: column; gap: 10px; }
-    .auth-overlay input { height: 48px; border-radius: 14px; border: 1px solid #2a2a2e; background: #1c1c1e; color: #fff; font-size: 16px; padding: 0 14px; outline: none; }
-    .auth-overlay input:focus-visible { border-color: #ff9f0a; }
-    .auth-btn { height: 48px; border-radius: 24px; border: none; font-size: 16px; font-weight: 500; cursor: pointer; }
-    .auth-btn:active { filter: brightness(135%); }
-    .auth-primary { background: #ff9f0a; color: #fff; }
-    .auth-secondary { background: #333; color: #fff; }
-    .auth-google { background: #fff; color: #000; }
-    .auth-or { color: #8e8e93; font-size: 13px; text-align: center; }
-    .auth-error { color: #ff453a; font-size: 13px; min-height: 18px; }
-    .hist-user { color: #8e8e93; font-size: 13px; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    @media (prefers-reduced-motion: reduce) { .history-panel { transition: none; } .calculator.shimmering::after { animation: none; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxe Nails Studio | Nail Technician</title>
+<style>
+:root {
+--primary: #d87093;
+--primary-dark: #b85274;
+--bg-light: #fff8fa;
+--text-dark: #2d2d2d;
+--text-muted: #666666;
+--white: #ffffff;
+}
+{
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+scroll-behavior: smooth;
+}
+body {
+background-color: var(--bg-light);
+color: var(--text-dark);
+line-height: 1.6;
+}
+/* 1. Navigation Bar /
+header {
+background: var(--white);
+box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+position: sticky;
+top: 0;
+z-index: 1000;
+}
+nav {
+max-width: 1100px;
+margin: 0 auto;
+padding: 1rem 2rem;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.logo {
+font-size: 1.5rem;
+font-weight: bold;
+color: var(--primary);
+letter-spacing: 1px;
+}
+.nav-links {
+list-style: none;
+display: flex;
+gap: 2rem;
+}
+.nav-links a {
+text-decoration: none;
+color: var(--text-dark);
+font-weight: 500;
+transition: color 0.3s;
+}
+.nav-links a:hover {
+color: var(--primary);
+}
+/* 2. Hero Section /
+.hero {
+background: linear-gradient(rgba(45, 45, 45, 0.55), rgba(45, 45, 45, 0.55)),
+url('https://unsplash.com') center/cover;
+height: 75vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+color: var(--white);
+padding: 0 1.5rem;
+}
+.hero h1 {
+font-size: 3rem;
+margin-bottom: 1rem;
+}
+.hero p {
+font-size: 1.2rem;
+max-width: 600px;
+margin-bottom: 2rem;
+}
+.btn {
+background: var(--primary);
+color: var(--white);
+padding: 0.9rem 2rem;
+border: none;
+border-radius: 30px;
+font-size: 1rem;
+font-weight: bold;
+text-decoration: none;
+cursor: pointer;
+transition: background 0.3s;
+}
+.btn:hover {
+background: var(--primary-dark);
+}
+/* 3. Body Sections /
+section {
+max-width: 1100px;
+margin: 4rem auto;
+padding: 0 2rem;
+}
+h2 {
+text-align: center;
+font-size: 2.2rem;
+color: var(--primary-dark);
+margin-bottom: 2.5rem;
+}
+/* Services & Prices /
+.services-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+gap: 1.5rem;
+}
+.service-card {
+background: var(--white);
+padding: 1.8rem;
+border-radius: 12px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-left: 5px solid var(--primary);
+}
+.service-info h3 {
+font-size: 1.2rem;
+margin-bottom: 0.3rem;
+}
+.service-info p {
+font-size: 0.9rem;
+color: var(--text-muted);
+}
+.price {
+font-size: 1.3rem;
+font-weight: bold;
+color: var(--primary-dark);
+}
+/* Gallery /
+.gallery-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+gap: 1rem;
+}
+.gallery-grid img {
+width: 100%;
+height: 260px;
+object-fit: cover;
+border-radius: 10px;
+transition: transform 0.3s;
+}
+.gallery-grid img:hover {
+transform: scale(1.03);
+}
+/* Booking & Deposit Info /
+.booking-container {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 2.5rem;
+background: var(--white);
+padding: 2.5rem;
+border-radius: 15px;
+box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.info-box {
+background: var(--bg-light);
+padding: 1.5rem;
+border-radius: 10px;
+margin-bottom: 1.5rem;
+}
+.info-box h3 {
+color: var(--primary-dark);
+margin-bottom: 0.8rem;
+}
+.bank-details {
+background: #ffeef2;
+padding: 1rem;
+border-radius: 8px;
+border: 1px dashed var(--primary);
+margin-top: 0.8rem;
+font-size: 0.95rem;
+}
+form {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+}
+input, select {
+padding: 0.85rem;
+border: 1px solid #ddd;
+border-radius: 8px;
+font-size: 1rem;
+}
+#confirmationMsg {
+display: none;
+margin-top: 1rem;
+padding: 1rem;
+background: #e6f7ed;
+color: #1e6b3b;
+border-radius: 8px;
+font-weight: 500;
+}
+/* 4. Footer /
+footer {
+background: var(--text-dark);
+color: var(--white);
+text-align: center;
+padding: 2.5rem 1rem;
+margin-top: 4rem;
+}
+footer p {
+margin: 0.4rem 0;
+font-size: 0.95rem;
+color: #cccccc;
+}
+@media (max-width: 768px) {
+.booking-container {
+grid-template-columns: 1fr;
+}
+.hero h1 {
+font-size: 2.2rem;
+}
+}
+</style>
 </head>
 <body>
+<!-- Navigation Bar -->
+<header>
+<nav>
+<div class="logo">LUXE NAILS</div>
+<ul class="nav-links">
+<li><a href="#home">Home</a></li>
+<li><a href="#services">Services</a></li>
+<li><a href="#gallery">Gallery</a></li>
+<li><a href="#booking">Book Now</a></li>
+</ul>
+</nav>
+</header>
+<!-- Hero Section (Landing Page) -->
+<section id="home" class="hero" style="max-width: 100%; margin: 0;">
+<h1>Flawless Nails, Tailored to You</h1>
+<p>Professional nail care, custom nail art, and long-lasting enhancements in a relaxing studio.</p>
+<a href="#booking" class="btn">Book an Appointment</a>
+</section>
+<!-- Body: Types of Nails & Prices -->
+<section id="services">
+<h2>Types of Nails & Prices</h2>
+<div class="services-grid">
+<div class="service-card">
+<div class="service-info">
+<h3>Gel Overlay</h3>
+<p>Natural nail strengthening with glossy gel polish</p>
+</div>
+<div class="price">R250</div>
+</div>
+<div class="service-card">
+<div class="service-info">
+<h3>Acrylic Full Set</h3>
+<p>Custom length extensions with solid colour</p>
+</div>
+<div class="price">R380</div>
+</div>
+<div class="service-card">
+<div class="service-info">
+<h3>Polygel Extensions</h3>
+<p>Lightweight, flexible, and durable nail extensions</p>
+</div>
+<div class="price">R400</div>
+</div>
+<div class="service-card">
+<div class="service-info">
+<h3>Rubber Base Manicure</h3>
+<p>Added structure and protection for natural nails</p>
+</div>
+<div class="price">R280</div>
+</div>
+<div class="service-card">
+<div class="service-info">
+<h3>French Tip / Ombré</h3>
+<p>Classic white tips or blended colour fade</p>
+</div>
+<div class="price">R320</div>
+</div>
+<div class="service-card">
+<div class="service-info">
+<h3>Soak Off & Nail Care</h3>
+<p>Safe product removal, shaping, and cuticle oil</p>
+</div>
+<div class="price">R120</div>
+</div>
+</div>
+</section>
+<!-- Body: Picture Gallery -->
+<section id="gallery">
+<h2>Our Work Gallery</h2>
+<div class="gallery-grid">
+<img src="https://unsplash.com" alt="Pink manicure design">
+<img src="https://unsplash.com" alt="Acrylic nail art">
+<img src="https://unsplash.com" alt="Neutral gel nails">
+<img src="https://unsplash.com" alt="French tip nails">
+</div>
+</section>
 
-  <div class="calculator shimmering" id="calculator">
-    <button type="button" class="hist-toggle" id="hist-open" aria-label="Show history">🕘</button>
-
-    <div class="avatar-wrap">
-      <button type="button" class="avatar-btn" id="avatar-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"></button>
-      <div class="avatar-menu" id="avatar-menu" role="menu" hidden>
-        <button type="button" role="menuitem" id="menu-profile">Profile</button>
-        <button type="button" role="menuitem" id="menu-logout">Log out</button>
-      </div>
-    </div>
-
-    <div class="display">
-      <div class="expression" id="expression"></div>
-      <div class="result" id="result">0</div>
-    </div>
-
-    <div class="buttons">
-      <button type="button" class="calc-key btn-func" id="clear-btn" onclick="handleClear()">AC</button>
-      <button type="button" class="calc-key btn-func" onclick="toggleSign()">+/−</button>
-      <button type="button" class="calc-key btn-func" onclick="handlePercent()">%</button>
-      <button type="button" class="calc-key btn-op" data-op="÷" onclick="chooseOperator('÷', this)">÷</button>
-
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('7')">7</button>
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('8')">8</button>
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('9')">9</button>
-      <button type="button" class="calc-key btn-op" data-op="×" onclick="chooseOperator('×', this)">×</button>
-
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('4')">4</button>
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('5')">5</button>
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('6')">6</button>
-      <button type="button" class="calc-key btn-op" data-op="−" onclick="chooseOperator('−', this)">−</button>
-
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('1')">1</button>
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('2')">2</button>
-      <button type="button" class="calc-key btn-num" onclick="appendNumber('3')">3</button>
-      <button type="button" class="calc-key btn-op" data-op="+" onclick="chooseOperator('+', this)">+</button>
-
-      <button type="button" class="calc-key btn-func" onclick="handleBackspace()">⌫</button>
-      <button type="button" class="calc-key btn-num" onclick="appendDecimal()">.</button>
-      <button type="button" class="calc-key btn-num btn-zero" onclick="appendNumber('0')">0</button>
-      <button type="button" class="calc-key btn-op" onclick="calculate()">=</button>
-    </div>
-
-    <div class="auth-overlay" id="auth-overlay">
-      <h1>Sign in</h1>
-      <p>Sign in to use the calculator and keep your history.</p>
-      <button type="button" class="auth-btn auth-google" id="auth-google">Continue with Google</button>
-      <div class="auth-or">or use email</div>
-      <form id="auth-form" novalidate>
-        <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
-        <input type="password" id="auth-password" placeholder="Password (6+ characters)" autocomplete="current-password">
-        <button type="submit" class="auth-btn auth-primary">Sign in</button>
-        <button type="button" class="auth-btn auth-secondary" id="auth-signup">Create account</button>
-      </form>
-      <div class="auth-error" id="auth-error" role="alert"></div>
-    </div>
-
-    <div class="history-panel" id="profile-panel" aria-hidden="true">
-      <div class="hist-head">
-        <span>Profile</span>
-        <button type="button" id="profile-close">Done</button>
-      </div>
-      <div class="profile-body">
-        <div class="profile-avatar" id="profile-avatar"></div>
-        <button type="button" class="auth-btn auth-secondary profile-change" id="profile-change">Change photo</button>
-        <input type="file" id="profile-file" accept="image/*" hidden>
-        <div class="profile-status" id="profile-status" role="status"></div>
-        <div class="profile-name" id="profile-name"></div>
-        <div class="profile-email" id="profile-email"></div>
-        <dl class="profile-meta">
-          <dt>Sign-in method</dt><dd id="profile-provider"></dd>
-          <dt>Member since</dt><dd id="profile-since"></dd>
-        </dl>
-      </div>
-    </div>
-
-    <div class="history-panel" id="history-panel" aria-hidden="true">
-      <div class="hist-head">
-        <span>History</span>
-        <button type="button" id="hist-close">Done</button>
-      </div>
-      <div class="hist-user" id="hist-user"></div>
-      <ul class="hist-list" id="hist-list"><li class="hist-empty">No calculations yet.</li></ul>
-      <div class="hist-status" id="hist-status"></div>
-    </div>
-  </div>
-
-  <script>
-    let currentInput = '0';
-    let previousInput = '';
-    let operator = null;
-    let lastOperand = null;
-    let lastOperator = null;
-    let shouldResetScreen = false;
-    let shimmerTimer = null;
-
-    const calculatorEl = document.getElementById('calculator');
-    const resultDisplay = document.getElementById('result');
-    const expressionDisplay = document.getElementById('expression');
-    const clearBtn = document.getElementById('clear-btn');
-
-    function triggerShimmer(durationMs = 5000) {
-      clearTimeout(shimmerTimer);
-      calculatorEl.classList.remove('shimmering');
-      void calculatorEl.offsetWidth;
-      calculatorEl.classList.add('shimmering');
-      shimmerTimer = setTimeout(() => calculatorEl.classList.remove('shimmering'), durationMs);
-    }
-    triggerShimmer(5000);
-
-    function updateDisplay() {
-      const len = currentInput.length;
-      if (len > 9) resultDisplay.style.fontSize = '38px';
-      else if (len > 6) resultDisplay.style.fontSize = '48px';
-      else resultDisplay.style.fontSize = '64px';
-      resultDisplay.textContent = formatNumber(currentInput);
-      clearBtn.textContent = (currentInput !== '0' || previousInput !== '') ? 'C' : 'AC';
-    }
-
-    function formatNumber(numStr) {
-      if (numStr === 'Error') return 'Error';
-      const parts = numStr.split('.');
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      return parts.join('.');
-    }
-
-    function clearActiveOperator() {
-      document.querySelectorAll('.btn-op').forEach(btn => btn.classList.remove('active'));
-    }
-
-    function appendNumber(number) {
-      clearActiveOperator();
-      if (currentInput === '0' || shouldResetScreen) {
-        if (shouldResetScreen && operator === null) {
-          expressionDisplay.textContent = '';
-          previousInput = '';
-          lastOperand = null;
-          lastOperator = null;
-        }
-        currentInput = number;
-        shouldResetScreen = false;
-      } else {
-        if (currentInput.replace(/[^0-9]/g, '').length >= 9) return;
-        currentInput += number;
-      }
-      if (operator !== null) {
-        expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
-      }
-      updateDisplay();
-    }
-
-    function appendDecimal() {
-      clearActiveOperator();
-      if (shouldResetScreen) {
-        if (operator === null) {
-          expressionDisplay.textContent = '';
-          previousInput = '';
-          lastOperand = null;
-          lastOperator = null;
-        }
-        currentInput = '0.';
-        shouldResetScreen = false;
-      } else if (!currentInput.includes('.')) {
-        currentInput += '.';
-      }
-      if (operator !== null) {
-        expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
-      }
-      updateDisplay();
-    }
-
-    function handleBackspace() {
-      if (currentInput === 'Error' || shouldResetScreen) return;
-      if (currentInput.length > 1) {
-        currentInput = currentInput.slice(0, -1);
-        if (currentInput === '-') currentInput = '0';
-      } else {
-        currentInput = '0';
-      }
-      if (operator !== null) {
-        expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
-      }
-      updateDisplay();
-    }
-
-    function handleClear() {
-      clearActiveOperator();
-      currentInput = '0';
-      previousInput = '';
-      operator = null;
-      lastOperand = null;
-      lastOperator = null;
-      shouldResetScreen = false;
-      expressionDisplay.textContent = '';
-      updateDisplay();
-    }
-
-    function toggleSign() {
-      if (currentInput === '0' || currentInput === 'Error') return;
-      currentInput = currentInput.startsWith('-') ? currentInput.slice(1) : '-' + currentInput;
-      if (operator !== null && !shouldResetScreen) {
-        expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
-      }
-      updateDisplay();
-    }
-
-    function handlePercent() {
-      if (currentInput === 'Error') return;
-      currentInput = String(Math.round((parseFloat(currentInput) / 100) * 1e10) / 1e10);
-      if (operator !== null && !shouldResetScreen) {
-        expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator} ${formatNumber(currentInput)}`;
-      }
-      updateDisplay();
-    }
-
-    function chooseOperator(op, btnElement) {
-      if (currentInput === 'Error') return;
-      if (operator !== null && !shouldResetScreen) {
-        const resultVal = computeValue(parseFloat(previousInput), parseFloat(currentInput), operator);
-        if (resultVal === 'Error') { showError(); return; }
-        previousInput = String(resultVal);
-        currentInput = previousInput;
-      } else {
-        previousInput = currentInput;
-      }
-      operator = op;
-      shouldResetScreen = true;
-      expressionDisplay.textContent = `${formatNumber(previousInput)} ${operator}`;
-      clearActiveOperator();
-      if (btnElement) btnElement.classList.add('active');
-      updateDisplay();
-    }
-
-    function computeValue(prev, current, op) {
-      let computation;
-      switch (op) {
-        case '+': computation = prev + current; break;
-        case '−': computation = prev - current; break;
-        case '×': computation = prev * current; break;
-        case '÷':
-          if (current === 0) return 'Error';
-          computation = prev / current;
-          break;
-        default: return current;
-      }
-      return Math.round(computation * 1e10) / 1e10;
-    }
-
-    function showError() {
-      currentInput = 'Error';
-      previousInput = '';
-      operator = null;
-      lastOperand = null;
-      lastOperator = null;
-      shouldResetScreen = true;
-      expressionDisplay.textContent = '';
-      clearActiveOperator();
-      updateDisplay();
-    }
-
-    function calculate() {
-      if (currentInput === 'Error') return;
-      let prev, current, activeOp;
-      if (operator !== null) {
-        prev = parseFloat(previousInput);
-        current = shouldResetScreen ? prev : parseFloat(currentInput);
-        activeOp = operator;
-        lastOperator = activeOp;
-        lastOperand = current;
-      } else if (lastOperator !== null && lastOperand !== null) {
-        prev = parseFloat(currentInput);
-        current = lastOperand;
-        activeOp = lastOperator;
-      } else {
-        return;
-      }
-      const resultVal = computeValue(prev, current, activeOp);
-      if (resultVal === 'Error') { showError(); return; }
-
-      const exprText = `${formatNumber(String(prev))} ${activeOp} ${formatNumber(String(current))}`;
-      expressionDisplay.textContent = exprText + ' =';
-      currentInput = String(resultVal);
-      previousInput = '';
-      operator = null;
-      shouldResetScreen = true;
-      clearActiveOperator();
-      updateDisplay();
-
-      // Save to history (defined by the module script below)
-      if (window.saveHistory) window.saveHistory(exprText, currentInput);
-    }
-
-    // Load a history entry back onto the display
-    window.recallHistory = function (resultStr) {
-      currentInput = resultStr;
-      previousInput = '';
-      operator = null;
-      shouldResetScreen = true;
-      expressionDisplay.textContent = '';
-      clearActiveOperator();
-      updateDisplay();
-    };
-
-    // History panel open/close (kept here so it works even if Firebase fails to load)
-    window.openHistoryPanel = function () {
-      const p = document.getElementById('history-panel');
-      p.classList.add('open');
-      p.setAttribute('aria-hidden', 'false');
-      if (!window.saveHistory) {
-        document.getElementById('hist-status').textContent =
-          'Firebase has not loaded. Open this page over http(s), e.g. GitHub Pages, not as a local file.';
-      }
-    };
-    window.closeHistoryPanel = function () {
-      const p = document.getElementById('history-panel');
-      p.classList.remove('open');
-      p.setAttribute('aria-hidden', 'true');
-    };
-    document.getElementById('hist-open').addEventListener('click', window.openHistoryPanel);
-    document.getElementById('hist-close').addEventListener('click', window.closeHistoryPanel);
-
-    setTimeout(() => {
-      if (!window.firebaseReady) {
-        document.getElementById('auth-error').textContent =
-          'Sign-in could not load. Open this page over http(s), e.g. GitHub Pages, not as a local file.';
-      }
-    }, 6000);
-
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.target && e.target.closest && e.target.closest('input')) return;
-      if (!document.getElementById('auth-overlay').classList.contains('hidden')) return;
-      if (document.getElementById('history-panel').classList.contains('open')) return;
-      if (document.getElementById('profile-panel').classList.contains('open')) return;
-      if (!document.getElementById('avatar-menu').hidden) return;
-      if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
-      if (e.key === '.') appendDecimal();
-      if (e.key === 'Backspace') handleBackspace();
-      if (e.key === 'Escape') handleClear();
-      if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculate(); }
-      if (e.key === '+') chooseOperator('+', document.querySelector('[data-op="+"]'));
-      if (e.key === '-') chooseOperator('−', document.querySelector('[data-op="−"]'));
-      if (e.key === '*') chooseOperator('×', document.querySelector('[data-op="×"]'));
-      if (e.key === '/') { e.preventDefault(); chooseOperator('÷', document.querySelector('[data-op="÷"]')); }
-    });
-  </script>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp }
-      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
-             createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile }
-      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    // Cloudinary (unsigned uploads). Never put your API secret in this file.
-    const CLOUDINARY_CLOUD_NAME = 'dmq6rct6';
-    const CLOUDINARY_UPLOAD_PRESET = 'raregrade';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCAQGgUda3Io6HpDYWBWdqIV1rC6M75rk4",
-      authDomain: "nexus-40e33.firebaseapp.com",
-      databaseURL: "https://nexus-40e33-default-rtdb.firebaseio.com",
-      projectId: "nexus-40e33",
-      storageBucket: "nexus-40e33.firebasestorage.app",
-      messagingSenderId: "144604648056",
-      appId: "1:144604648056:web:d1f12fe2f4876f4ffed38d",
-      measurementId: "G-QNN58MFXKH"
-    };
-
-    const listEl = document.getElementById('hist-list');
-    const statusEl = document.getElementById('hist-status');
-    const authEl = document.getElementById('auth-overlay');
-    const authErr = document.getElementById('auth-error');
-    const emailEl = document.getElementById('auth-email');
-    const passEl = document.getElementById('auth-password');
-    const userEl = document.getElementById('hist-user');
-    const closePanel = window.closeHistoryPanel;
-
-    const messages = {
-      'auth/invalid-email': 'Enter a valid email address.',
-      'auth/missing-password': 'Enter your password.',
-      'auth/weak-password': 'Password must be at least 6 characters.',
-      'auth/email-already-in-use': 'An account with this email already exists. Sign in instead.',
-      'auth/invalid-credential': 'Email or password is incorrect.',
-      'auth/user-not-found': 'No account with this email. Create one instead.',
-      'auth/wrong-password': 'Email or password is incorrect.',
-      'auth/too-many-requests': 'Too many attempts. Try again later.',
-      'auth/popup-closed-by-user': 'Google sign-in was closed before finishing.',
-      'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups and try again.',
-      'auth/operation-not-allowed': 'This sign-in method is not enabled in Firebase yet.',
-      'auth/unauthorized-domain': 'This website is not on Firebase\u2019s authorized domains list.'
-    };
-    function showAuthError(err) {
-      authErr.textContent = messages[err.code] || ('Something went wrong (' + (err.code || err.message) + ').');
-    }
-    function setStatus(msg) { statusEl.textContent = msg; }
-
-    function render(items) {
-      listEl.innerHTML = '';
-      if (!items.length) {
-        const li = document.createElement('li');
-        li.className = 'hist-empty';
-        li.textContent = 'No calculations yet.';
-        listEl.appendChild(li);
-        return;
-      }
-      items.slice().reverse().forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'hist-item';
-        const ex = document.createElement('div');
-        ex.className = 'h-expr';
-        ex.textContent = item.expression + ' =';
-        const rs = document.createElement('div');
-        rs.className = 'h-res';
-        rs.textContent = item.result.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        li.append(ex, rs);
-        li.addEventListener('click', () => { window.recallHistory(item.result); closePanel(); });
-        listEl.appendChild(li);
-      });
-    }
-
-    const avatarBtn = document.getElementById('avatar-btn');
-    const menuEl = document.getElementById('avatar-menu');
-    const profilePanel = document.getElementById('profile-panel');
-
-    function paintAvatar(el, user) {
-      el.textContent = '';
-      const label = (user.displayName || user.email || '?').trim();
-      if (user.photoURL) {
-        const img = document.createElement('img');
-        img.alt = '';
-        img.referrerPolicy = 'no-referrer';
-        img.src = user.photoURL;
-        img.onerror = () => { el.textContent = label.charAt(0).toUpperCase(); };
-        el.appendChild(img);
-      } else {
-        el.textContent = label.charAt(0).toUpperCase();
-      }
-    }
-    function setMenu(open) {
-      menuEl.hidden = !open;
-      avatarBtn.setAttribute('aria-expanded', String(open));
-    }
-    function openProfile(user) {
-      paintAvatar(document.getElementById('profile-avatar'), user);
-      document.getElementById('profile-name').textContent = user.displayName || 'No display name';
-      document.getElementById('profile-email').textContent = user.email || '';
-      const id = user.providerData[0] && user.providerData[0].providerId;
-      document.getElementById('profile-provider').textContent =
-        id === 'google.com' ? 'Google' : id === 'password' ? 'Email and password' : (id || 'Unknown');
-      document.getElementById('profile-since').textContent = user.metadata.creationTime
-        ? new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-        : '';
-      setProfileStatus('');
-      profilePanel.classList.add('open');
-      profilePanel.setAttribute('aria-hidden', 'false');
-    }
-    function closeProfile() {
-      profilePanel.classList.remove('open');
-      profilePanel.setAttribute('aria-hidden', 'true');
-    }
-
-    const profileStatus = document.getElementById('profile-status');
-    function setProfileStatus(msg, isError) {
-      profileStatus.textContent = msg;
-      profileStatus.classList.toggle('error', !!isError);
-    }
-    async function uploadToCloudinary(file) {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      const res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data.error && data.error.message) || 'Upload failed.');
-      // Square, face-aware crop at avatar size
-      return data.secure_url.replace('/upload/', '/upload/c_fill,g_face,w_256,h_256,f_auto,q_auto/');
-    }
-
-    try {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-      const auth = getAuth(app);
-      window.firebaseReady = true;
-
-      let currentUser = null;
-      let unsubscribe = null;
-
-      window.saveHistory = (expression, result) => {
-        if (!currentUser) return;
-        push(ref(db, 'history/' + currentUser.uid), { expression, result, time: serverTimestamp() })
-          .catch(err => setStatus("Couldn't save: " + err.code));
-      };
-
-      onAuthStateChanged(auth, user => {
-        currentUser = user;
-        if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-        if (user) {
-          authErr.textContent = '';
-          passEl.value = '';
-          authEl.classList.add('hidden');
-          userEl.textContent = user.email || user.displayName || '';
-          paintAvatar(avatarBtn, user);
-          unsubscribe = onValue(
-            query(ref(db, 'history/' + user.uid), limitToLast(50)),
-            snap => {
-              const items = [];
-              snap.forEach(child => items.push(child.val()));
-              render(items);
-              setStatus('');
-            },
-            err => setStatus("Couldn't load history: " + err.code)
-          );
-        } else {
-          closePanel();
-          closeProfile();
-          setMenu(false);
-          handleClear();
-          render([]);
-          userEl.textContent = '';
-          authEl.classList.remove('hidden');
-        }
-      });
-
-      document.getElementById('auth-form').addEventListener('submit', e => {
-        e.preventDefault();
-        authErr.textContent = '';
-        signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value).catch(showAuthError);
-      });
-      document.getElementById('auth-signup').addEventListener('click', () => {
-        authErr.textContent = '';
-        createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value).catch(showAuthError);
-      });
-      document.getElementById('auth-google').addEventListener('click', () => {
-        authErr.textContent = '';
-        signInWithPopup(auth, new GoogleAuthProvider()).catch(showAuthError);
-      });
-      const doSignOut = () => signOut(auth).catch(err => setStatus("Couldn't sign out: " + err.code));
-      avatarBtn.addEventListener('click', e => { e.stopPropagation(); setMenu(menuEl.hidden); });
-      document.getElementById('menu-profile').addEventListener('click', () => { setMenu(false); if (currentUser) openProfile(currentUser); });
-      document.getElementById('menu-logout').addEventListener('click', () => { setMenu(false); doSignOut(); });
-      document.getElementById('profile-close').addEventListener('click', closeProfile);
-      const fileInput = document.getElementById('profile-file');
-      const changeBtn = document.getElementById('profile-change');
-      changeBtn.addEventListener('click', () => fileInput.click());
-      fileInput.addEventListener('change', async () => {
-        const file = fileInput.files[0];
-        fileInput.value = '';
-        if (!file || !currentUser) return;
-        if (CLOUDINARY_CLOUD_NAME.startsWith('YOUR_') || CLOUDINARY_UPLOAD_PRESET.startsWith('YOUR_')) {
-          setProfileStatus('Photo upload is not set up yet. Add your Cloudinary cloud name and upload preset.', true);
-          return;
-        }
-        if (!file.type.startsWith('image/')) { setProfileStatus('Choose an image file.', true); return; }
-        if (file.size > 5 * 1024 * 1024) { setProfileStatus('Image must be 5 MB or smaller.', true); return; }
-        changeBtn.disabled = true;
-        setProfileStatus('Uploading\u2026');
-        try {
-          const url = await uploadToCloudinary(file);
-          await updateProfile(currentUser, { photoURL: url });
-          paintAvatar(avatarBtn, currentUser);
-          paintAvatar(document.getElementById('profile-avatar'), currentUser);
-          setProfileStatus('Photo updated.');
-        } catch (err) {
-          setProfileStatus(err.message || 'Could not update your photo.', true);
-        } finally {
-          changeBtn.disabled = false;
-        }
-      });
-      document.addEventListener('click', e => { if (!menuEl.hidden && !menuEl.contains(e.target)) setMenu(false); });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menuEl.hidden) { setMenu(false); avatarBtn.focus(); } });
-    } catch (err) {
-      authErr.textContent = 'Sign-in is unavailable right now.';
-    }
-  </script>
-</body>
-</html>
+Get Outlook for iOS
