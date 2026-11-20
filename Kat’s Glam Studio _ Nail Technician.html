@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kat’s Glam Studio | Nail Technician</title>
+<meta name="description" content="Gel, acrylic and polygel nails, custom nail art and long-lasting enhancements.">
+<style>
+:root {
+  --primary: #d87093;
+  --primary-dark: #b85274;
+  --bg-light: #fff8fa;
+  --text-dark: #2d2d2d;
+  --text-muted: #666666;
+  --surface: #ffffff;
+  --soft: #ffeef2;
+  --footer-bg: #2d2d2d;
+  --footer-text: #cccccc;
+  --border: #dddddd;
+  --white: #ffffff;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #e58aa8;
+    --primary-dark: #f0a3bb;
+    --bg-light: #1c1417;
+    --text-dark: #f3eaed;
+    --text-muted: #b9a9af;
+    --surface: #2a1e22;
+    --soft: #3a2830;
+    --footer-bg: #120d0f;
+    --border: #4a3a40;
+    color-scheme: dark;
+  }
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  scroll-behavior: smooth;
+}
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { scroll-padding-top: 5rem; }
+body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
+
+/* 1. Navigation Bar */
+header {
+  background: var(--surface);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 1000;
+}
+nav {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1rem 2rem;
+}
+.logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; font-size: 1.5rem; font-weight: bold; color: var(--primary); letter-spacing: 1px; }
+.logo svg { width: 42px; height: 42px; flex: none; }
+.nav-links { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; justify-self: end; width: min(100%, 460px); }
+.nav-links a { display: block; text-align: center; padding: 0.5rem 0.75rem; border-radius: 8px; text-decoration: none; color: var(--text-dark); font-weight: 500; transition: color 0.3s, background 0.3s; }
+.nav-links a:hover { background: var(--soft); }
+.nav-links a:hover { color: var(--primary); }
+
+/* 2. Hero Section */
+.hero {
+  background:
+    linear-gradient(rgba(45,45,45,0.45), rgba(45,45,45,0.55)),
+    radial-gradient(circle at 20% 25%, #f4a6bf 0, transparent 45%),
+    radial-gradient(circle at 80% 70%, #b85274 0, transparent 50%),
+    #d87093;
+  min-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  padding: 3rem 1.5rem;
+}
+.hero h1 { font-size: 3rem; margin-bottom: 1rem; }
+.hero p { font-size: 1.2rem; max-width: 600px; margin-bottom: 2rem; }
+.btn {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.btn:hover { background: var(--primary-dark); }
+.btn:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 2px; }
+.hero .btn { background: #fff; color: #b85274; }
+.hero .btn:hover { background: #ffeef2; }
+
+/* 3. Body Sections */
+section { max-width: 1100px; margin: 4rem auto; padding: 0 2rem; }
+section.hero { max-width: 100%; margin: 0; }
+h2 { text-align: center; font-size: 2.2rem; color: var(--primary-dark); margin-bottom: 2.5rem; }
+
+/* Services & Prices */
+.services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.service-card {
+  background: var(--surface);
+  padding: 1.8rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-left: 5px solid var(--primary);
+}
+.service-info h3 { font-size: 1.2rem; margin-bottom: 0.3rem; }
+.service-info p { font-size: 0.9rem; color: var(--text-muted); }
+.price { font-size: 1.3rem; font-weight: bold; color: var(--primary-dark); }
+
+/* Gallery (colour tiles: replace with your own photos, see note in HTML) */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.gallery-grid .tile {
+  height: 260px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  transition: transform 0.3s;
+}
+.gallery-grid .tile:hover { transform: scale(1.03); }
+.t1 { background: linear-gradient(135deg, #f6b8cc, #d87093); }
+.t2 { background: linear-gradient(135deg, #e7a1c9, #8e4a7a); }
+.t3 { background: linear-gradient(135deg, #e8d3c4, #b99580); }
+.t4 { background: linear-gradient(135deg, #ffffff, #e9a3b8); color: #7a2e4a; text-shadow: none; }
+
+/* Booking & Deposit Info */
+.booking-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  background: var(--surface);
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.info-box { background: var(--bg-light); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; }
+.info-box h3 { color: var(--primary-dark); margin-bottom: 0.8rem; }
+.bank-details {
+  background: var(--soft);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px dashed var(--primary);
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+}
+form { display: flex; flex-direction: column; gap: 1rem; }
+label { font-weight: 500; font-size: 0.95rem; }
+input, select {
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text-dark);
+}
+#confirmationMsg {
+  display: none;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #e6f7ed;
+  color: #1e6b3b;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* 4. Footer */
+footer {
+  background: var(--footer-bg);
+  color: #fff;
+  text-align: center;
+  padding: 2.5rem 1rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  margin-top: 4rem;
+}
+footer p { margin: 0.4rem 0; font-size: 0.95rem; color: var(--footer-text); }
+
+@media (max-width: 768px) {
+  .booking-container { grid-template-columns: 1fr; padding: 1.5rem; }
+  .hero h1 { font-size: 2.2rem; }
+  section { padding: 0 1.25rem; }
+  nav { grid-template-columns: 1fr; padding: 0.75rem 1rem; }
+  .logo { justify-self: center; }
+  .nav-links { justify-self: stretch; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<header>
+  <nav>
+    <a href="#home" class="logo" aria-label="Kat’s Glam Studio home">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="23" fill="#d87093"/>
+        <rect x="19" y="7" width="10" height="11" rx="2" fill="#fff"/>
+        <rect x="21.5" y="9" width="5" height="7" rx="1" fill="#b85274"/>
+        <rect x="13" y="18" width="22" height="23" rx="7" fill="#fff"/>
+        <path d="M24 37c-3.5-3-5-5.2-5-7.3a5 5 0 0 1 10 0c0 2.1-1.5 4.3-5 7.3z" fill="#d87093"/>
+      </svg>
+      <span>KAT’S GLAM</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#booking">Book now</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- Hero Section -->
+<section id="home" class="hero">
+  <h1>Flawless Nails, Tailored to You</h1>
+  <p>Professional nail care, custom nail art, and long-lasting enhancements in a relaxing studio.</p>
+  <a href="#booking" class="btn">Book an appointment</a>
+</section>
+
+<!-- Types of Nails & Prices -->
+<section id="services">
+  <h2>Types of Nails &amp; Prices</h2>
+  <div class="services-grid">
+    <div class="service-card"><div class="service-info"><h3>Gel Overlay</h3><p>Natural nail strengthening with glossy gel polish</p></div><div class="price">R250</div></div>
+    <div class="service-card"><div class="service-info"><h3>Acrylic Full Set</h3><p>Custom length extensions with solid colour</p></div><div class="price">R380</div></div>
+    <div class="service-card"><div class="service-info"><h3>Polygel Extensions</h3><p>Lightweight, flexible, and durable nail extensions</p></div><div class="price">R400</div></div>
+    <div class="service-card"><div class="service-info"><h3>Rubber Base Manicure</h3><p>Added structure and protection for natural nails</p></div><div class="price">R280</div></div>
+    <div class="service-card"><div class="service-info"><h3>French Tip / Ombré</h3><p>Classic white tips or blended colour fade</p></div><div class="price">R320</div></div>
+    <div class="service-card"><div class="service-info"><h3>Soak Off &amp; Nail Care</h3><p>Safe product removal, shaping, and cuticle oil</p></div><div class="price">R120</div></div>
+  </div>
+</section>
+
+<!-- Picture Gallery -->
+<!-- To use real photos: replace each <div class="tile ..."> with <img src="your-photo.jpg" alt="..."> and style .gallery-grid img like .tile (width:100%; height:260px; object-fit:cover; border-radius:10px). -->
+<section id="gallery">
+  <h2>Our Work Gallery</h2>
+  <div class="gallery-grid">
+    <div class="tile t1" role="img" aria-label="Pink manicure design">Pink manicure</div>
+    <div class="tile t2" role="img" aria-label="Acrylic nail art">Acrylic nail art</div>
+    <div class="tile t3" role="img" aria-label="Neutral gel nails">Neutral gel</div>
+    <div class="tile t4" role="img" aria-label="French tip nails">French tips</div>
+  </div>
+</section>
+
+<!-- Booking & Deposit Info -->
+<section id="booking">
+  <h2>Book Your Appointment</h2>
+  <div class="booking-container">
+    <div>
+      <div class="info-box">
+        <h3>Deposit</h3>
+        <p>A R100 deposit secures your slot. It is deducted from the final price. Please send proof of payment on WhatsApp.</p>
+        <div class="bank-details">
+          <strong>Bank:</strong> Your Bank<br>
+          <strong>Account name:</strong> Your Name<br>
+          <strong>Account number:</strong> 0000000000<br>
+          <strong>Reference:</strong> Your name + date
+        </div>
+      </div>
+      <div class="info-box">
+        <h3>Good to know</h3>
+        <p>Arrive with clean, product-free nails. Cancel or reschedule at least 24 hours ahead to keep your deposit.</p>
+      </div>
+    </div>
+
+    <div>
+      <form id="bookingForm">
+        <div><label for="name">Full name</label><input type="text" id="name" required autocomplete="name"></div>
+        <div><label for="phone">Phone / WhatsApp</label><input type="tel" id="phone" required autocomplete="tel"></div>
+        <div>
+          <label for="service">Service</label>
+          <select id="service" required>
+            <option value="">Choose a service</option>
+            <option>Gel Overlay (R250)</option>
+            <option>Acrylic Full Set (R380)</option>
+            <option>Polygel Extensions (R400)</option>
+            <option>Rubber Base Manicure (R280)</option>
+            <option>French Tip / Ombré (R320)</option>
+            <option>Soak Off &amp; Nail Care (R120)</option>
+          </select>
+        </div>
+        <div><label for="date">Preferred date</label><input type="date" id="date" required></div>
+        <div><label for="time">Preferred time</label><input type="time" id="time" required></div>
+        <button type="submit" class="btn">Request booking</button>
+      </form>
+      <div id="confirmationMsg" role="status"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p><strong>KAT’S GLAM STUDIO</strong></p>
+  <p>Open Tuesday to Saturday, 09:00 to 17:00</p>
+  <p>WhatsApp: 000 000 0000</p>
+  <p>&copy; 2026 Kat’s Glam Studio</p>
+</footer>
+
+<script>
+  var dateInput = document.getElementById('date');
+  dateInput.min = new Date().toISOString().split('T')[0];
+
+  document.getElementById('bookingForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('name').value.trim();
+    var service = document.getElementById('service').value;
+    var date = document.getElementById('date').value;
+    var time = document.getElementById('time').value;
+    var msg = document.getElementById('confirmationMsg');
+    msg.textContent = 'Thank you, ' + name + '. Your request for ' + service + ' on ' + date + ' at ' + time +
+      ' has been received. Pay the deposit and send proof on WhatsApp to confirm your slot.';
+    msg.style.display = 'block';
+    this.reset();
+    msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+</script>
+</body>
+</html>
