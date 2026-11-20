@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bookings Dashboard | KAT’S GLAM STUDIO</title>
+<style>
+:root { --primary:#d87093; --primary-dark:#b85274; --bg:#fff8fa; --text:#2d2d2d; --muted:#666; --surface:#fff; --soft:#ffeef2; --border:#e6d5da; }
+* { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+body { background:var(--bg); color:var(--text); line-height:1.5; min-height:100vh; }
+.hidden { display:none !important; }
+button { cursor:pointer; font-size:0.95rem; border:none; border-radius:8px; padding:0.55rem 1rem; font-weight:600; }
+.btn { background:var(--primary); color:#fff; }
+.btn:hover { background:var(--primary-dark); }
+.btn-ghost { background:var(--soft); color:var(--primary-dark); }
+input, select { width:100%; padding:0.8rem; border:1px solid var(--border); border-radius:8px; font-size:1rem; background:#fff; color:var(--text); }
+
+/* Login */
+#login { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+.login-card { background:var(--surface); padding:2.5rem; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.08); width:100%; max-width:380px; }
+.login-card h1 { color:var(--primary-dark); font-size:1.5rem; margin-bottom:0.3rem; }
+.login-card p { color:var(--muted); margin-bottom:1.5rem; font-size:0.95rem; }
+.login-card form { display:flex; flex-direction:column; gap:1rem; }
+#loginError { color:#b3261e; font-size:0.9rem; min-height:1.2rem; }
+
+/* App */
+header { background:var(--surface); box-shadow:0 2px 10px rgba(0,0,0,0.05); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+header h1 { color:var(--primary); font-size:1.2rem; letter-spacing:1px; }
+header small { color:var(--muted); display:block; font-weight:400; letter-spacing:0; }
+main { max-width:1100px; margin:0 auto; padding:2rem 1.25rem; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+.stat { background:var(--surface); padding:1.2rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); border-left:5px solid var(--primary); }
+.stat b { display:block; font-size:1.8rem; color:var(--primary-dark); }
+.stat span { color:var(--muted); font-size:0.9rem; }
+.toolbar { display:grid; grid-template-columns:1fr 200px; gap:1rem; margin-bottom:1.5rem; }
+.list { display:grid; gap:1rem; }
+.card { background:var(--surface); padding:1.3rem; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.04); display:grid; grid-template-columns:1fr auto; gap:1rem; align-items:center; }
+.card h3 { font-size:1.1rem; margin-bottom:0.2rem; }
+.card p { color:var(--muted); font-size:0.92rem; }
+.badge { display:inline-block; padding:0.15rem 0.65rem; border-radius:20px; font-size:0.78rem; font-weight:700; margin-left:0.5rem; vertical-align:middle; }
+.pending { background:#fff3cd; color:#7a5b00; }
+.confirmed { background:#e6f7ed; color:#1e6b3b; }
+.cancelled { background:#fde8e8; color:#9b1c1c; }
+.actions { display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; }
+.actions a { text-decoration:none; background:#25d366; color:#fff; border-radius:8px; padding:0.55rem 1rem; font-weight:600; font-size:0.95rem; }
+.danger { background:#fde8e8; color:#9b1c1c; }
+.empty { text-align:center; color:var(--muted); padding:3rem 1rem; background:var(--surface); border-radius:12px; }
+@media (max-width:700px) {
+  .card { grid-template-columns:1fr; }
+  .actions { justify-content:flex-start; }
+  .toolbar { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <h1>KAT’S GLAM STUDIO</h1>
+    <p>Sign in to view your bookings.</p>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required autocomplete="username">
+      <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+      <div id="loginError" role="alert"></div>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app" class="hidden">
+  <header>
+    <h1>KAT’S GLAM STUDIO <small>Bookings dashboard</small></h1>
+    <button class="btn-ghost" id="logoutBtn">Sign out</button>
+  </header>
+  <main>
+    <div class="stats">
+      <div class="stat"><b id="sTotal">0</b><span>All bookings</span></div>
+      <div class="stat"><b id="sPending">0</b><span>Pending</span></div>
+      <div class="stat"><b id="sConfirmed">0</b><span>Confirmed</span></div>
+      <div class="stat"><b id="sToday">0</b><span>Today</span></div>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Search name, phone or service">
+      <select id="filter">
+        <option value="all">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div id="list" class="list"></div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* PASTE YOUR FIREBASE CONFIG HERE (same one as in index.html) */
+const firebaseConfig = {
+  apiKey: "AIzaSyAGZgA13UDTCCACRtbYVDggoOmwWqpmzIg",
+  authDomain: "kat-s-glam-studio.firebaseapp.com",
+  databaseURL: "https://kat-s-glam-studio-default-rtdb.firebaseio.com",
+  projectId: "kat-s-glam-studio",
+  storageBucket: "kat-s-glam-studio.firebasestorage.app",
+  messagingSenderId: "107385180943",
+  appId: "1:107385180943:web:97c53e92db1d7d6ee9647a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const $ = (id) => document.getElementById(id);
+let bookings = [];
+let unsubscribe = null;
+
+/* ---- Sign in / out ---- */
+$('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('loginError').textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value);
+  } catch (err) {
+    $('loginError').textContent = 'Wrong email or password.';
+  }
+});
+$('logoutBtn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    $('login').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    unsubscribe = onValue(ref(db, 'bookings'), (snap) => {
+      bookings = [];
+      snap.forEach((child) => { bookings.push({ id: child.key, ...child.val() }); });
+      bookings.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      render();
+    }, () => {
+      $('list').innerHTML = '';
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = 'Could not load bookings. This account may not have permission.';
+      $('list').appendChild(d);
+    });
+  } else {
+    if (unsubscribe) unsubscribe();
+    $('app').classList.add('hidden');
+    $('login').classList.remove('hidden');
+  }
+});
+
+/* ---- Render ---- */
+function waLink(phone) {
+  var digits = String(phone || '').replace(/\D/g, '');
+  if (digits.startsWith('0')) digits = '27' + digits.slice(1); // South Africa
+  return 'https://wa.me/' + digits;
+}
+
+function render() {
+  var today = new Date().toISOString().split('T')[0];
+  $('sTotal').textContent = bookings.length;
+  $('sPending').textContent = bookings.filter(b => b.status === 'pending').length;
+  $('sConfirmed').textContent = bookings.filter(b => b.status === 'confirmed').length;
+  $('sToday').textContent = bookings.filter(b => b.date === today && b.status !== 'cancelled').length;
+
+  var q = $('search').value.toLowerCase().trim();
+  var f = $('filter').value;
+  var shown = bookings.filter(function (b) {
+    var text = [b.name, b.phone, b.service].join(' ').toLowerCase();
+    return (f === 'all' || b.status === f) && (!q || text.indexOf(q) !== -1);
+  });
+
+  var list = $('list');
+  list.innerHTML = '';
+  if (!shown.length) {
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = bookings.length ? 'No bookings match your search.' : 'No bookings yet. They will appear here as clients book.';
+    list.appendChild(empty);
+    return;
+  }
+
+  shown.forEach(function (b) {
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    var info = document.createElement('div');
+    var h = document.createElement('h3');
+    h.textContent = b.name || 'No name';
+    var badge = document.createElement('span');
+    badge.className = 'badge ' + b.status;
+    badge.textContent = b.status;
+    h.appendChild(badge);
+    var p1 = document.createElement('p');
+    p1.textContent = b.service;
+    var p2 = document.createElement('p');
+    p2.textContent = b.date + ' at ' + b.time + '  |  ' + b.phone;
+    info.append(h, p1, p2);
+
+    var actions = document.createElement('div');
+    actions.className = 'actions';
+    var wa = document.createElement('a');
+    wa.href = waLink(b.phone);
+    wa.target = '_blank';
+    wa.rel = 'noopener';
+    wa.textContent = 'WhatsApp';
+    actions.appendChild(wa);
+
+    if (b.status !== 'confirmed') actions.appendChild(mkBtn('Confirm', 'btn', () => update(ref(db, 'bookings/' + b.id), { status: 'confirmed' })));
+    if (b.status !== 'cancelled') actions.appendChild(mkBtn('Cancel', 'btn-ghost', () => update(ref(db, 'bookings/' + b.id), { status: 'cancelled' })));
+    actions.appendChild(mkBtn('Delete', 'danger', function () {
+      if (confirm('Delete this booking for ' + b.name + '? This cannot be undone.')) remove(ref(db, 'bookings/' + b.id));
+    }));
+
+    card.append(info, actions);
+    list.appendChild(card);
+  });
+}
+
+function mkBtn(label, cls, onClick) {
+  var b = document.createElement('button');
+  b.className = cls;
+  b.textContent = label;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+$('search').addEventListener('input', render);
+$('filter').addEventListener('change', render);
+</script>
+</body>
+</html>
