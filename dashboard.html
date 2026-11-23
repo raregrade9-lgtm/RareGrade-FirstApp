@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Bookings dashboard | KAT’S GLAM STUDIO</title>
+<style>
+:root {
+  --primary: #d87093;
+  --primary-dark: #b85274;
+  --bg: #fff8fa;
+  --text: #2d2d2d;
+  --muted: #666666;
+  --surface: #ffffff;
+  --soft: #ffeef2;
+  --border: #e6d9de;
+  --ok-bg: #e6f7ed; --ok: #1e6b3b;
+  --warn-bg: #fff4d6; --warn: #8a6100;
+  --bad-bg: #fde8e8; --bad: #9b1c1c;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #e58aa8; --primary-dark: #f0a3bb;
+    --bg: #1c1417; --text: #f3eaed; --muted: #b9a9af;
+    --surface: #2a1e22; --soft: #3a2830; --border: #4a3a40;
+    --ok-bg: #173a27; --ok: #8fe0b0;
+    --warn-bg: #3d3010; --warn: #f2cf75;
+    --bad-bg: #411c1c; --bad: #f4a3a3;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; }
+.hidden { display: none !important; }
+
+.btn {
+  background: var(--primary); color: #fff; border: none; border-radius: 20px;
+  padding: 0.55rem 1.2rem; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.btn:hover { background: var(--primary-dark); }
+.btn.ghost { background: transparent; color: var(--primary-dark); border: 1px solid var(--primary); }
+.btn.ghost:hover { background: var(--soft); }
+.btn.small { padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+.btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--bad); }
+.btn.danger:hover { background: var(--bad-bg); }
+.btn:disabled { opacity: 0.6; cursor: default; }
+:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 2px; }
+
+/* Login */
+#login { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.login-card {
+  background: var(--surface); border-radius: 14px; padding: 2rem; width: min(100%, 380px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 1rem;
+}
+.login-card h1 { font-size: 1.4rem; color: var(--primary-dark); }
+.login-card p { color: var(--muted); font-size: 0.95rem; }
+label { font-weight: 500; font-size: 0.9rem; display: block; margin-bottom: 0.25rem; }
+input {
+  width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 1rem; background: var(--surface); color: var(--text);
+}
+.error { background: var(--bad-bg); color: var(--bad); padding: 0.7rem; border-radius: 8px; font-size: 0.9rem; }
+
+/* App */
+header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0.9rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 10;
+}
+header h1 { font-size: 1.15rem; color: var(--primary-dark); }
+header .who { color: var(--muted); font-size: 0.85rem; margin-right: 0.75rem; }
+main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat { background: var(--surface); border-radius: 12px; padding: 1rem 1.2rem; border-left: 5px solid var(--primary); }
+.stat b { display: block; font-size: 1.8rem; line-height: 1.1; }
+.stat span { color: var(--muted); font-size: 0.9rem; }
+
+.toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+.tab {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  border-radius: 20px; padding: 0.4rem 1rem; cursor: pointer; font-size: 0.9rem;
+}
+.tab[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.toolbar input { max-width: 240px; margin-left: auto; padding: 0.5rem 0.8rem; }
+
+.list { display: grid; gap: 0.9rem; }
+.card {
+  background: var(--surface); border-radius: 12px; padding: 1.1rem 1.3rem;
+  display: grid; grid-template-columns: 1fr auto; gap: 0.75rem 1.5rem; align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.card h3 { font-size: 1.05rem; }
+.card .meta { color: var(--muted); font-size: 0.92rem; }
+.card .when { font-weight: 600; color: var(--primary-dark); }
+.badge { display: inline-block; padding: 0.1rem 0.7rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin-left: 0.5rem; vertical-align: middle; }
+.badge.pending { background: var(--warn-bg); color: var(--warn); }
+.badge.confirmed { background: var(--ok-bg); color: var(--ok); }
+.badge.cancelled { background: var(--bad-bg); color: var(--bad); }
+.actions { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+.empty { text-align: center; color: var(--muted); padding: 3rem 1rem; background: var(--surface); border-radius: 12px; }
+a.btn { text-decoration: none; display: inline-block; }
+
+@media (max-width: 640px) {
+  .card { grid-template-columns: 1fr; }
+  .actions { justify-content: flex-start; }
+  .toolbar input { max-width: none; margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="login">
+  <form class="login-card" id="loginForm">
+    <h1>KAT’S GLAM STUDIO</h1>
+    <p>Sign in to see your bookings.</p>
+    <div id="loginError" class="error hidden" role="alert"></div>
+    <div><label for="email">Email</label><input type="email" id="email" required autocomplete="username"></div>
+    <div><label for="password">Password</label><input type="password" id="password" required autocomplete="current-password"></div>
+    <button class="btn" type="submit" id="loginBtn">Sign in</button>
+  </form>
+</section>
+
+<!-- DASHBOARD -->
+<section id="app" class="hidden">
+  <header>
+    <h1>Bookings dashboard</h1>
+    <div><span class="who" id="who"></span><button class="btn ghost small" id="logoutBtn">Sign out</button></div>
+  </header>
+  <main>
+    <div class="stats">
+      <div class="stat"><b id="sTotal">0</b><span>Total bookings</span></div>
+      <div class="stat"><b id="sPending">0</b><span>Waiting for deposit</span></div>
+      <div class="stat"><b id="sConfirmed">0</b><span>Confirmed</span></div>
+      <div class="stat"><b id="sUpcoming">0</b><span>Upcoming confirmed</span></div>
+    </div>
+    <div class="toolbar" id="tabs">
+      <button class="tab" data-f="all" aria-pressed="true">All</button>
+      <button class="tab" data-f="pending" aria-pressed="false">Pending</button>
+      <button class="tab" data-f="confirmed" aria-pressed="false">Confirmed</button>
+      <button class="tab" data-f="cancelled" aria-pressed="false">Cancelled</button>
+      <input type="search" id="search" placeholder="Search name, phone or service" aria-label="Search bookings">
+    </div>
+    <div id="error" class="error hidden" role="alert"></div>
+    <div class="list" id="list"></div>
+  </main>
+</section>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAGZgA13UDTCCACRtbYVDggoOmwWqpmzIg",
+    authDomain: "kat-s-glam-studio.firebaseapp.com",
+    databaseURL: "https://kat-s-glam-studio-default-rtdb.firebaseio.com",
+    projectId: "kat-s-glam-studio",
+    storageBucket: "kat-s-glam-studio.firebasestorage.app",
+    messagingSenderId: "107385180943",
+    appId: "1:107385180943:web:97c53e92db1d7d6ee9647a"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getDatabase(fbApp);
+  const auth = getAuth(fbApp);
+
+  const $ = (id) => document.getElementById(id);
+  let bookings = [];
+  let filter = 'all';
+  let unsubscribe = null;
+
+  /* ---------- Auth ---------- */
+  $('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('loginBtn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    $('loginError').classList.add('hidden');
+    try {
+      await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value);
+    } catch (err) {
+      $('loginError').textContent = 'Could not sign in. Check your email and password.';
+      $('loginError').classList.remove('hidden');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sign in';
+    }
+  });
+  $('logoutBtn').addEventListener('click', () => signOut(auth));
+
+  onAuthStateChanged(auth, (user) => {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    if (!user) {
+      $('app').classList.add('hidden');
+      $('login').classList.remove('hidden');
+      $('password').value = '';
+      return;
+    }
+    $('who').textContent = user.email;
+    $('login').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    $('error').classList.add('hidden');
+    unsubscribe = onValue(ref(db, 'bookings'), (snap) => {
+      const val = snap.val() || {};
+      bookings = Object.keys(val).map((id) => Object.assign({ id: id }, val[id]));
+      render();
+    }, () => {
+      $('error').textContent = 'Could not load bookings. This account may not be allowed to view them. Check the database rules.';
+      $('error').classList.remove('hidden');
+    });
+  });
+
+  /* ---------- Helpers ---------- */
+  function waLink(b) {
+    let p = String(b.phone || '').replace(/[^\d+]/g, '');
+    if (p.startsWith('+')) p = p.slice(1);
+    else if (p.startsWith('0')) p = '27' + p.slice(1);
+    const text = b.status === 'confirmed'
+      ? 'Hi ' + b.name + ', your ' + b.service + ' booking at KAT’S GLAM STUDIO on ' + fmtDate(b.date) + ' at ' + b.time + ' is confirmed. See you then!'
+      : 'Hi ' + b.name + ', thanks for your booking request for ' + b.service + ' on ' + fmtDate(b.date) + ' at ' + b.time + '. Please send the R100 deposit to confirm your slot.';
+    return 'https://wa.me/' + p + '?text=' + encodeURIComponent(text);
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    const dt = new Date(d + 'T00:00:00');
+    return isNaN(dt) ? d : dt.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function today() { return new Date().toISOString().split('T')[0]; }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const q = $('search').value.trim().toLowerCase();
+    const sorted = bookings.slice().sort((a, b) =>
+      (a.date + ' ' + a.time).localeCompare(b.date + ' ' + b.time));
+
+    $('sTotal').textContent = bookings.length;
+    $('sPending').textContent = bookings.filter(b => b.status === 'pending').length;
+    $('sConfirmed').textContent = bookings.filter(b => b.status === 'confirmed').length;
+    $('sUpcoming').textContent = bookings.filter(b => b.status === 'confirmed' && b.date >= today()).length;
+
+    const rows = sorted.filter(b => (filter === 'all' || b.status === filter) &&
+      (!q || [b.name, b.phone, b.service].join(' ').toLowerCase().includes(q)));
+
+    const list = $('list');
+    list.textContent = '';
+    if (!rows.length) {
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = bookings.length ? 'No bookings match this filter.' : 'No bookings yet. New requests from the website will appear here.';
+      list.appendChild(d);
+      return;
+    }
+    rows.forEach((b) => list.appendChild(card(b)));
+  }
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function card(b) {
+    const c = el('div', 'card');
+    const info = el('div');
+    const h = el('h3', null, b.name || 'No name');
+    h.appendChild(el('span', 'badge ' + b.status, b.status));
+    info.appendChild(h);
+    info.appendChild(el('div', 'when', fmtDate(b.date) + ' at ' + (b.time || '')));
+    info.appendChild(el('div', 'meta', (b.service || '') + ' | ' + (b.phone || '')));
+    if (b.createdAt) info.appendChild(el('div', 'meta', 'Requested ' + new Date(b.createdAt).toLocaleString('en-ZA')));
+    c.appendChild(info);
+
+    const act = el('div', 'actions');
+    const wa = el('a', 'btn ghost small', 'WhatsApp');
+    wa.href = waLink(b); wa.target = '_blank'; wa.rel = 'noopener';
+    act.appendChild(wa);
+    if (b.status !== 'confirmed') act.appendChild(btn('Confirm', 'btn small', () => setStatus(b.id, 'confirmed')));
+    if (b.status !== 'pending') act.appendChild(btn('Mark pending', 'btn ghost small', () => setStatus(b.id, 'pending')));
+    if (b.status !== 'cancelled') act.appendChild(btn('Cancel', 'btn ghost small', () => setStatus(b.id, 'cancelled')));
+    act.appendChild(btn('Delete', 'btn danger small', () => del(b)));
+    c.appendChild(act);
+    return c;
+  }
+  function btn(label, cls, fn) {
+    const b = el('button', cls, label);
+    b.type = 'button';
+    b.addEventListener('click', fn);
+    return b;
+  }
+
+  async function setStatus(id, status) {
+    try { await update(ref(db, 'bookings/' + id), { status: status }); }
+    catch (e) { showError('Could not update this booking. Try again.'); }
+  }
+  async function del(b) {
+    if (!confirm('Delete the booking for ' + (b.name || 'this client') + '? This cannot be undone.')) return;
+    try { await remove(ref(db, 'bookings/' + b.id)); }
+    catch (e) { showError('Could not delete this booking. Try again.'); }
+  }
+  function showError(msg) { $('error').textContent = msg; $('error').classList.remove('hidden'); }
+
+  $('tabs').addEventListener('click', (e) => {
+    const t = e.target.closest('.tab');
+    if (!t) return;
+    filter = t.dataset.f;
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-pressed', x === t ? 'true' : 'false'));
+    render();
+  });
+  $('search').addEventListener('input', render);
+</script>
+</body>
+</html>
